@@ -1,0 +1,158 @@
+name: 🚀 최적화된 CI/CD Pipeline
+
+# ===============================
+# 🎯 트리거 최적화 - 불필요한 실행 방지
+# ===============================
+on:
+  push:
+    branches: [ main ]  # develop 제거 (개발용은 로컬에서)
+    paths-ignore:       # 문서 변경 시에는 실행 안함
+      - '*.md'
+      - 'docs/**'
+      - '.gitignore'
+  pull_request:
+    branches: [ main ]
+    paths-ignore:
+      - '*.md'
+      - 'docs/**'
+      - '.gitignore'
+
+# ===============================
+# 🔄 동시 실행 제한 - 리소스 절약
+# ===============================
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true  # 이전 실행 중단하고 새로운 실행
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
+jobs:
+  # ===============================
+  # 🧪 백엔드 테스트 (빠른 피드백)
+  # ===============================
+  backend-test:
+    runs-on: ubuntu-latest
+    # 소모량 예상: 3-4분
+    defaults:
+      run:
+        working-directory: ./backend
+    
+    steps:
+    - name: 📥 코드 체크아웃
+      uses: actions/checkout@v4
+    
+    - name: ☕ JDK 17 캐시 설정
+      uses: actions/setup-java@v4
+      with:
+        java-version: '17'
+        distribution: 'temurin'
+        cache: gradle  # 🚀 Gradle 의존성 자동 캐시
+    
+    - name: 🔧 Gradle 실행 권한 부여
+      run: chmod +x gradlew
+    
+    # 테스트만 빠르게 실행 (빌드는 별도)
+    - name: 🧪 단위 테스트 실행
+      run: ./gradlew test --parallel --build-cache
+      env:
+        SPRING_PROFILES_ACTIVE: local
+    
+    # 테스트 결과만 업로드 (실패 시에만)
+    - name: 📊 테스트 결과 업로드
+      uses: actions/upload-artifact@v4
+      if: failure()
+      with:
+        name: test-reports
+        path: backend/build/reports/tests/test/
+        retention-days: 3  # 3일만 보관
+
+  # ===============================
+  # 🏗️ 빌드 & 배포 (main 브랜치만)
+  # ===============================
+  deploy:
+    needs: backend-test  # 테스트 성공 시에만 실행
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    # 소모량 예상: 6-8분
+    
+    steps:
+    - name: 📥 코드 체크아웃
+      uses: actions/checkout@v4
+    
+    # ===============================
+    # 🎨 프론트엔드 빌드 & 배포
+    # ===============================
+    - name: 🟢 Node.js 캐시 설정
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+        cache-dependency-path: ./frontend/package-lock.json
+    
+    - name: 📦 프론트엔드 의존성 설치
+      working-directory: ./frontend
+      run: npm ci --only=production  # dev 의존성 제외
+    
+    - name: 🏗️ 프론트엔드 빌드
+      working-directory: ./frontend  
+      run: npm run build
+      env:
+        VITE_API_URL: ${{ secrets.BACKEND_URL }}
+    
+    - name: 🚀 GitHub Pages 배포
+      uses: peaceiris/actions-gh-pages@v4  # 최신 버전 사용
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        publish_dir: ./frontend/dist
+        force_orphan: true  # 히스토리 정리로 용량 절약
+    
+    # ===============================
+    # ☕ 백엔드 빌드 & Railway 배포
+    # ===============================
+    - name: ☕ JDK 17 캐시 설정
+      uses: actions/setup-java@v4
+      with:
+        java-version: '17'
+        distribution: 'temurin'
+        cache: gradle
+    
+    - name: 🔧 Gradle 실행 권한 부여
+      working-directory: ./backend
+      run: chmod +x gradlew
+    
+    - name: 🏗️ JAR 빌드 (테스트 제외)
+      working-directory: ./backend
+      run: ./gradlew bootJar -x test --parallel --build-cache
+      env:
+        SPRING_PROFILES_ACTIVE: prod
+    
+    # ===============================
+    # 🚂 Railway 직접 배포 (Docker 없이)
+    # ===============================
+    - name: 🚂 Railway 배포
+      working-directory: ./backend
+      run: |
+        # Railway CLI 설치
+        npm install -g @railway/cli@latest
+        
+        # Railway 로그인 및 배포
+        railway login --token ${{ secrets.RAILWAY_TOKEN }}
+        railway link ${{ secrets.RAILWAY_PROJECT_ID }}
+        
+        # JAR 파일 직접 업로드 배포 (Docker 빌드 스킵)
+        railway up --detach
+        
+        echo "✅ 배포 완료!"
+      env:
+        RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+        RAILWAY_PROJECT_ID: ${{ secrets.RAILWAY_PROJECT_ID }}
+
+# ===============================
+# 📊 예상 소모량: 9-12분 (40% 절약!)
+# ===============================
+# - 이전: 17-22분
+# - 최적화 후: 9-12분  
+# - 월 100회 배포: 1000분 (여유롭게 사용 가능)
+# ===============================

@@ -1,0 +1,70 @@
+# Docker Compose 설정
+# 밸런스 게임 커뮤니티 애플리케이션 전체 스택 구성
+
+version: '3.8'
+
+services:
+  # 백엔드 Spring Boot 애플리케이션
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: balance-game-backend
+    ports:
+      - "8080:8080"
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - SPRING_DATASOURCE_URL=jdbc:h2:mem:testdb
+      - SPRING_DATASOURCE_USERNAME=sa
+      - SPRING_DATASOURCE_PASSWORD=
+      - SPRING_JPA_HIBERNATE_DDL_AUTO=create-drop
+      - SPRING_H2_CONSOLE_ENABLED=true
+    volumes:
+      - backend_data:/app/data
+    networks:
+      - app-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/api/users"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+  # 프론트엔드 Vue.js 애플리케이션 (Nginx)
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: balance-game-frontend
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend
+    networks:
+      - app-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:80"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
+# 볼륨 정의
+volumes:
+  backend_data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ./data
+
+# 네트워크 정의
+networks:
+  app-network:
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+        - subnet: 172.20.0.0/16

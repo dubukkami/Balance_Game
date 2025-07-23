@@ -1,0 +1,142 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
+jobs:
+  # 백엔드 테스트 및 빌드
+  backend-test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./backend
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Set up JDK 17
+      uses: actions/setup-java@v4
+      with:
+        java-version: '17'
+        distribution: 'temurin'
+    
+    - name: Cache Gradle packages
+      uses: actions/cache@v4
+      with:
+        path: |
+          ~/.gradle/caches
+          ~/.gradle/wrapper
+        key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+        restore-keys: |
+          ${{ runner.os }}-gradle-
+    
+    - name: Grant execute permission for gradlew
+      run: chmod +x gradlew
+    
+    - name: Run tests
+      run: ./gradlew test
+      env:
+        SPRING_PROFILES_ACTIVE: local
+    
+    - name: Build with Gradle
+      run: ./gradlew build -x test
+      env:
+        SPRING_PROFILES_ACTIVE: local
+    
+    - name: Upload test reports
+      uses: actions/upload-artifact@v4
+      if: failure()
+      with:
+        name: test-reports
+        path: backend/build/reports/tests/test/
+
+  # 🎨 프론트엔드는 Vercel에서 자동 배포
+  # GitHub Actions에서 프론트엔드 빌드 제거 (Vercel이 자동 처리)
+  # - Vercel이 Git Push 감지하여 자동 빌드
+  # - GitHub Actions 소모량 절약
+  # - 더 빠른 배포 (1-2분)
+
+  # 🚂 백엔드 Railway 배포 (Docker 빌드 제거하고 직접 배포)
+  backend-deploy:
+    needs: backend-test
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    defaults:
+      run:
+        working-directory: ./backend
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Set up JDK 17
+      uses: actions/setup-java@v4
+      with:
+        java-version: '17'
+        distribution: 'temurin'
+    
+    - name: Build JAR
+      run: ./gradlew bootJar
+      env:
+        SPRING_PROFILES_ACTIVE: prod
+    
+    - name: Log in to Container Registry
+      uses: docker/login-action@v3
+      with:
+        registry: ${{ env.REGISTRY }}
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+    
+    - name: Extract metadata
+      id: meta
+      uses: docker/metadata-action@v5
+      with:
+        images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+        tags: |
+          type=ref,event=branch
+          type=sha
+          type=raw,value=latest,enable={{is_default_branch}}
+    
+    - name: Build and push Docker image
+      uses: docker/build-push-action@v5
+      with:
+        context: ./backend
+        push: true
+        tags: ${{ steps.meta.outputs.tags }}
+        labels: ${{ steps.meta.outputs.labels }}
+    
+    # ===============================
+    # 🚂 Railway 배포 
+    # ===============================
+    - name: Deploy to Railway
+      run: |
+        # Railway CLI 설치
+        npm install -g @railway/cli
+        
+        # Railway 로그인 (토큰 사용)
+        railway login --token ${{ secrets.RAILWAY_TOKEN }}
+        
+        # 프로젝트 연결 및 배포 실행
+        railway link ${{ secrets.RAILWAY_PROJECT_ID }}
+        
+        # 환경 변수 자동 설정 (Railway 대시보드에서 미리 설정된 값 사용)
+        # DATABASE_URL, JWT_SECRET, OAUTH 클라이언트 정보 등
+        
+        # 백엔드 서비스 배포 실행
+        railway up --service backend --detach
+        
+        # 배포 완료 후 헬스체크
+        echo "⏳ 배포 완료 대기 중..."
+        sleep 30
+        railway status
+      env:
+        RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+        RAILWAY_PROJECT_ID: ${{ secrets.RAILWAY_PROJECT_ID }}
