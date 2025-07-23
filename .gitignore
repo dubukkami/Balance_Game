@@ -37,10 +37,6 @@ Thumbs.db
 /backend/target/
 /backend/build/
 /backend/out/
-/backend/.gradle/
-/backend/gradle/
-/backend/gradlew
-/backend/gradlew.bat
 
 # Node.js
 /frontend/node_modules/
