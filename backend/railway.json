@@ -7,7 +7,7 @@
   
   "build": {
     "builder": "DOCKERFILE",
-    "dockerfilePath": "backend/Dockerfile",
+    "dockerfilePath": "Dockerfile",
     "//": "멀티스테이지 빌드로 최적화된 이미지 생성",
     "//": "1단계: Gradle로 JAR 빌드",
     "//": "2단계: 런타임 이미지로 경량화",
