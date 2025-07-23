@@ -1,5 +1,5 @@
 # 멀티 스테이지 빌드
-FROM openjdk:17-jdk-slim as builder
+FROM openjdk:17-jdk-slim AS builder
 
 WORKDIR /app
 COPY gradlew .
@@ -19,11 +19,11 @@ FROM openjdk:17-jdk-slim
 
 WORKDIR /app
 
-# 시간대 설정 (선택사항)
-RUN apt-get update && \
-    DEBIAN_FRONTEND=noninteractive apt-get install -y tzdata && \
-    ln -sf /usr/share/zoneinfo/Asia/Seoul /etc/localtime && \
-    echo "Asia/Seoul" > /etc/timezone
+## 시간대 설정 (선택사항)
+#RUN apt-get update && \
+#    DEBIAN_FRONTEND=noninteractive apt-get install -y tzdata && \
+#    ln -sf /usr/share/zoneinfo/Asia/Seoul /etc/localtime && \
+#    echo "Asia/Seoul" > /etc/timezone
 
 
 # 빌드된 JAR 파일 복사
