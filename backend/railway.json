@@ -3,13 +3,21 @@
   
   "//": "🐳 Railway Docker 배포 설정",
   "//": "Railway가 자동으로 Dockerfile을 감지하고 빌드합니다",
+  "//": "main 브랜치 푸시 시 자동 배포됩니다",
   
   "build": {
     "builder": "DOCKERFILE",
-    "dockerfilePath": "Dockerfile",
+    "dockerfilePath": "backend/Dockerfile",
     "//": "멀티스테이지 빌드로 최적화된 이미지 생성",
     "//": "1단계: Gradle로 JAR 빌드",
-    "//": "2단계: 런타임 이미지로 경량화"
+    "//": "2단계: 런타임 이미지로 경량화",
+    "watchPatterns": [
+      "**/*.java",
+      "**/*.yml",
+      "**/*.properties",
+      "build.gradle",
+      "Dockerfile"
+    ]
   },
   
   "deploy": {
