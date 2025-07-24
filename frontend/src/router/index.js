@@ -131,6 +131,11 @@ router.beforeEach((to, from, next) => {
   const platform = to.meta.platform
   const title = to.meta.title
   
+  // 무한 리다이렉트 방지: from과 to가 같으면 리다이렉트 중단
+  if (from.path === to.path) {
+    return next()
+  }
+  
   // 모바일 기기에서 웹 경로로 접속하면 모바일 경로로 리다이렉트
   if (isMobileDevice() && platform === 'web') {
     const mobileRoutes = {
@@ -141,7 +146,7 @@ router.beforeEach((to, from, next) => {
     }
     
     const mobilePath = mobileRoutes[to.path]
-    if (mobilePath) {
+    if (mobilePath && from.path !== mobilePath) {
       return next(mobilePath)
     }
   }
@@ -156,7 +161,7 @@ router.beforeEach((to, from, next) => {
     }
     
     const webPath = webRoutes[to.path]
-    if (webPath) {
+    if (webPath && from.path !== webPath) {
       return next(webPath)
     }
   }
