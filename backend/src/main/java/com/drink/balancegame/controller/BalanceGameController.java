@@ -29,7 +29,6 @@ import java.util.Optional;
 @RestController
 @RequestMapping("/api/balance-games")
 @RequiredArgsConstructor
-@CrossOrigin(origins = "http://localhost:3000")
 public class BalanceGameController {
     
     private final BalanceGameRepository balanceGameRepository;

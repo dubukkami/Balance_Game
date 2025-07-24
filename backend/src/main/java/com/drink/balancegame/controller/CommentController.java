@@ -31,7 +31,6 @@ import java.util.stream.Collectors;
 @RestController
 @RequestMapping("/api/comments")
 @RequiredArgsConstructor
-@CrossOrigin(origins = "http://localhost:3000")
 public class CommentController {
     
     private final CommentRepository commentRepository;

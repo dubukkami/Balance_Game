@@ -26,7 +26,6 @@ import java.util.stream.Collectors;
 @RestController
 @RequestMapping("/api/votes")
 @RequiredArgsConstructor
-@CrossOrigin(origins = "http://localhost:3000")
 public class VoteController {
     
     private final VoteRepository voteRepository;
