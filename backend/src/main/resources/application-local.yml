@@ -3,53 +3,109 @@
 # ===============================
 
 # H2 인메모리 데이터베이스 사용 (개발편의성)
-DATABASE_URL: jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
-DB_DRIVER: org.h2.Driver
-DB_USERNAME: sa
-DB_PASSWORD: 
-
-# H2 콘솔 활성화
-H2_CONSOLE_ENABLED: true
-
-# JPA 설정 (로컬 개발용)
-DDL_AUTO: create-drop  # 매번 스키마 재생성
-SHOW_SQL: true
-FORMAT_SQL: true
-HIBERNATE_DIALECT: org.hibernate.dialect.H2Dialect
-DATABASE_TYPE: h2
-
-# CORS 설정 (로컬 개발 서버들)
-CORS_ORIGINS: http://localhost:3000,http://localhost:5173,http://127.0.0.1:3000,http://127.0.0.1:5173
-
-# OAuth2 리다이렉트 URI (로컬)
-GOOGLE_REDIRECT_URI: http://localhost:8080/login/oauth2/code/google
-KAKAO_REDIRECT_URI: http://localhost:8080/login/oauth2/code/kakao  
-NAVER_REDIRECT_URI: http://localhost:8080/login/oauth2/code/naver
-AUTHORIZED_REDIRECT_URI: http://localhost:3000/oauth2/redirect
-
-# 서버 설정
-SERVER_PORT: 8080
-
-# JWT 설정 (개발용 - 짧은 만료시간)
-JWT_TOKEN_VALIDITY: 86400  # 24시간
-
-# 로깅 설정 (상세 로깅)
-LOG_LEVEL_ROOT: INFO
-LOG_LEVEL_APP: DEBUG
-LOG_LEVEL_WEB: DEBUG  
-LOG_LEVEL_SQL: DEBUG
-LOG_LEVEL_SQL_PARAMS: TRACE
-
-# 개발 전용 설정
 spring:
+  datasource:
+    url: jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
+    driver-class-name: org.h2.Driver
+    username: sa
+    password: 
+
+  # H2 콘솔 활성화
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
+
+  # JPA 설정 (로컬 개발용)
+  jpa:
+    hibernate:
+      ddl-auto: create-drop  # 매번 스키마 재생성
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+        dialect: org.hibernate.dialect.H2Dialect
+    database: h2
+
+  # CORS 설정 (로컬 개발 서버들)
+  web:
+    cors:
+      allowed-origins:
+        - http://localhost:3000
+        - http://localhost:5173
+        - http://127.0.0.1:3000
+        - http://127.0.0.1:5173
+      allowed-methods:
+        - GET
+        - POST
+        - PUT
+        - DELETE
+        - OPTIONS
+        - PATCH
+      allowed-headers: "*"
+      allow-credentials: true
+
+  # OAuth2 설정 (로컬)
+  security:
+    oauth2:
+      client:
+        registration:
+          google:
+            client-id: ${GOOGLE_CLIENT_ID:your-google-client-id}
+            client-secret: ${GOOGLE_CLIENT_SECRET:your-google-client-secret}
+            redirect-uri: http://localhost:8080/login/oauth2/code/google
+            scope:
+              - email
+              - profile
+          kakao:
+            client-id: ${KAKAO_CLIENT_ID:your-kakao-client-id}
+            client-secret: ${KAKAO_CLIENT_SECRET:your-kakao-client-secret}
+            redirect-uri: http://localhost:8080/login/oauth2/code/kakao
+            authorization-grant-type: authorization_code
+            scope:
+              - profile_nickname
+              - account_email
+              - profile_image
+            client-name: Kakao
+          naver:
+            client-id: ${NAVER_CLIENT_ID:your-naver-client-id}
+            client-secret: ${NAVER_CLIENT_SECRET:your-naver-client-secret}
+            redirect-uri: http://localhost:8080/login/oauth2/code/naver
+            authorization-grant-type: authorization_code
+            scope:
+              - name
+              - email
+              - profile_image
+            client-name: Naver
+
   # 개발 도구 활성화
   devtools:
     restart:
       enabled: true
     livereload:
       enabled: true
-  
-  # 에러 페이지 상세 정보 표시
-  web:
-    resources:
-      add-mappings: true
+
+# 서버 설정
+server:
+  port: 8080
+
+# JWT 설정 (개발용)
+jwt:
+  secret: ${JWT_SECRET:balancegame-secret-key-for-jwt-token-generation-and-validation-should-be-at-least-256-bits}
+  token-validity-in-seconds: 86400  # 24시간
+
+# 앱 설정
+app:
+  name: 술하재밸
+  version: 1.0.0-dev
+  oauth2:
+    authorized-redirect-uri: http://localhost:3000/oauth2/redirect
+
+# 로깅 설정 (상세 로깅)
+logging:
+  level:
+    root: INFO
+    com.drink.balancegame: DEBUG
+    org.springframework.web: DEBUG
+    org.hibernate.SQL: DEBUG
+    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
