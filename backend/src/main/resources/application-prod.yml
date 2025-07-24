@@ -3,6 +3,12 @@
 # ===============================
 
 spring:
+  # 자동 설정 제외 (메트릭스 관련)
+  autoconfigure:
+    exclude:
+      - org.springframework.boot.actuate.autoconfigure.metrics.MetricsAutoConfiguration
+      - org.springframework.boot.actuate.autoconfigure.metrics.export.simple.SimpleMetricsExportAutoConfiguration
+
   # PostgreSQL 데이터베이스 설정 (Neon DB)
   datasource:
     url: ${DATABASE_URL}  # Railway에서 자동 설정
