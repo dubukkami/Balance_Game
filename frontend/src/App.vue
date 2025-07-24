@@ -1,106 +1,152 @@
 <!--
-  술하재밸 - 술 마실 때 하면 재밌는 밸런스 게임
+  밸런스 게임 커뮤니티 - 웹/모바일 플랫폼별 레이아웃
 -->
 <template>
   <div id="app">
-    <!-- 블라인드 스타일 헤더 -->
-    <header class="header">
-      <div class="container">
-        <div class="header-left">
+    <!-- 웹 헤더 (데스크톱/태블릿) -->
+    <header v-if="isWebPlatform" class="web-header">
+      <div class="web-header-content">
+        <div class="web-brand">
           <router-link to="/" class="brand-link">
-            <div class="brand-logo">
-              <span class="brand-emoji">🍻</span>
-              <div class="brand-text">
-                <span class="brand-name">술하재밸</span>
-                <span class="brand-desc">술 마실 때 하면 재밌는 밸런스 게임</span>
-              </div>
-            </div>
+            <span class="brand-icon">🍻</span>
+            <span class="brand-title">술하재밸</span>
           </router-link>
         </div>
         
-        <div class="header-right">
-          <nav class="nav-menu">
-            <router-link to="/" class="nav-link">
-              <i class="nav-icon">🏠</i>
-              <span>홈</span>
+        <nav class="web-nav">
+          <router-link to="/" class="nav-item">홈</router-link>
+          <router-link to="/games" class="nav-item">게임 목록</router-link>
+          <router-link to="/create" class="nav-item" v-if="authStore.isLoggedIn">게임 만들기</router-link>
+        </nav>
+        
+        <div class="web-user-section">
+          <div v-if="authStore.isLoggedIn" class="user-profile-web">
+            <router-link to="/profile" class="user-link-web">
+              <img 
+                v-if="authStore.user?.profileImageUrl" 
+                :src="authStore.user.profileImageUrl" 
+                :alt="authStore.user.nickname"
+                class="user-avatar-web"
+              />
+              <div v-else class="user-avatar-default-web">
+                {{ authStore.user?.nickname?.charAt(0) || '?' }}
+              </div>
+              <span class="user-name">{{ authStore.user?.nickname }}</span>
             </router-link>
-            <router-link to="/games" class="nav-link">
-              <i class="nav-icon">⚖️</i>
-              <span>밸런스</span>
-            </router-link>
-            <router-link to="/create" class="nav-link" v-if="authStore.isLoggedIn">
-              <i class="nav-icon">✍️</i>
-              <span>만들기</span>
-            </router-link>
-          </nav>
-          
-          <!-- 사용자 영역 -->
-          <div class="user-area">
-            <div v-if="authStore.isLoggedIn" class="user-profile">
-              <router-link to="/profile" class="user-info">
-                <img 
-                  v-if="authStore.user?.profileImageUrl" 
-                  :src="authStore.user.profileImageUrl" 
-                  :alt="authStore.user.nickname"
-                  class="user-avatar"
-                />
-                <div v-else class="user-avatar-default">
-                  {{ authStore.user?.nickname?.charAt(0) || '?' }}
-                </div>
-                <div class="user-details">
-                  <span class="user-nickname">{{ authStore.user?.nickname }}</span>
-                  <span class="user-provider">{{ getProviderName(authStore.user?.provider) }}</span>
-                </div>
-              </router-link>
-              <button @click="handleLogout" class="logout-btn">
-                <i class="logout-icon">🚪</i>
-                <span>로그아웃</span>
-              </button>
-            </div>
-            
-            <router-link to="/login" class="login-btn" v-else>
-              <i class="login-icon">👤</i>
-              <span>로그인</span>
-            </router-link>
+            <button @click="handleLogout" class="logout-btn-web">
+              로그아웃
+            </button>
           </div>
+          
+          <router-link to="/login" class="login-btn-web" v-else>
+            로그인
+          </router-link>
+        </div>
+      </div>
+    </header>
+
+    <!-- 모바일 헤더 -->
+    <header v-if="isMobilePlatform" class="mobile-header">
+      <div class="header-content">
+        <div class="brand-section">
+          <span class="brand-emoji">🍻</span>
+          <span class="brand-name">술하재밸</span>
+        </div>
+        
+        <!-- 로그인/프로필 영역 -->
+        <div class="user-section">
+          <div v-if="authStore.isLoggedIn" class="user-profile-mobile">
+            <router-link :to="getMobileProfilePath()" class="user-link">
+              <img 
+                v-if="authStore.user?.profileImageUrl" 
+                :src="authStore.user.profileImageUrl" 
+                :alt="authStore.user.nickname"
+                class="user-avatar-mobile"
+              />
+              <div v-else class="user-avatar-default-mobile">
+                {{ authStore.user?.nickname?.charAt(0) || '?' }}
+              </div>
+            </router-link>
+            <button @click="handleLogout" class="logout-btn-mobile">
+              <span>🚪</span>
+            </button>
+          </div>
+          
+          <router-link to="/mobile/login" class="login-btn-mobile" v-else>
+            <span>👤</span>
+          </router-link>
         </div>
       </div>
     </header>
 
     <!-- 메인 컨텐츠 -->
-    <main class="main-content">
+    <main :class="['main-content', { 'web-content': isWebPlatform, 'mobile-content': isMobilePlatform }]">
       <router-view />
     </main>
 
-    <!-- 푸터 -->
-    <footer class="footer">
-      <div class="container">
-        <div class="footer-content">
-          <div class="footer-logo">
-            <span class="footer-emoji">🍻</span>
-            <span class="footer-text">술하재밸</span>
-          </div>
-          <p class="footer-desc">술자리가 더 재밌어지는 밸런스 게임 커뮤니티</p>
-          <p class="footer-copyright">&copy; 2024 술하재밸. All rights reserved.</p>
-        </div>
-      </div>
-    </footer>
+    <!-- 하단 탭 네비게이션 (모바일 전용) -->
+    <nav v-if="isMobilePlatform" class="bottom-nav">
+      <router-link to="/mobile" class="tab-item">
+        <div class="tab-icon">🏠</div>
+        <span class="tab-label">홈</span>
+      </router-link>
+      
+      <router-link to="/mobile/games" class="tab-item">
+        <div class="tab-icon">⚖️</div>
+        <span class="tab-label">밸런스</span>
+      </router-link>
+      
+      <router-link to="/mobile/create" class="tab-item" v-if="authStore.isLoggedIn">
+        <div class="tab-icon">✍️</div>
+        <span class="tab-label">만들기</span>
+      </router-link>
+      
+      <router-link to="/mobile/profile" class="tab-item" v-if="authStore.isLoggedIn">
+        <div class="tab-icon">👤</div>
+        <span class="tab-label">내정보</span>
+      </router-link>
+      
+      <router-link to="/mobile/login" class="tab-item" v-else>
+        <div class="tab-icon">👤</div>
+        <span class="tab-label">로그인</span>
+      </router-link>
+    </nav>
   </div>
 </template>
 
 <script setup>
 /**
- * 술하재밸 메인 애플리케이션 컴포넌트 로직
+ * 밸런스 게임 커뮤니티 메인 애플리케이션 컴포넌트 로직
+ * 웹/모바일 플랫폼별 레이아웃 분리
  */
-import { onMounted } from 'vue'
-import { useRouter } from 'vue-router'
+import { onMounted, computed } from 'vue'
+import { useRouter, useRoute } from 'vue-router'
 import { useAuthStore } from './stores/auth'
 
 const router = useRouter()
+const route = useRoute()
 const authStore = useAuthStore()
 
+/**
+ * 플랫폼 감지
+ */
+const isWebPlatform = computed(() => {
+  return route.meta?.platform === 'web' || route.meta?.platform === 'common'
+})
+
+const isMobilePlatform = computed(() => {
+  return route.meta?.platform === 'mobile'
+})
+
+/**
+ * 모바일 프로필 경로 반환
+ */
+const getMobileProfilePath = () => {
+  return '/mobile/profile'
+}
+
 onMounted(() => {
-  console.log('술하재밸 시작! 🍻')
+  console.log('밸런스 게임 커뮤니티 시작! ⚖️')
   // 인증 상태 초기화
   authStore.initAuth()
 })
@@ -110,7 +156,13 @@ onMounted(() => {
  */
 const handleLogout = () => {
   authStore.logout()
-  router.push('/')
+  
+  // 플랫폼에 따라 다른 홈으로 이동
+  if (isMobilePlatform.value) {
+    router.push('/mobile')
+  } else {
+    router.push('/')
+  }
 }
 
 /**
@@ -130,366 +182,421 @@ const getProviderName = (provider) => {
 @import './styles/variables.css';
 @import './styles/global.css';
 
-/* 블라인드 스타일 헤더 */
-.header {
-  background: var(--bg-primary);
-  border-bottom: 1px solid var(--border-light);
-  padding: var(--space-4) 0;
-  position: sticky;
-  top: 0;
-  z-index: var(--z-sticky);
-  box-shadow: var(--shadow-sm);
+/* 앱 전체 레이아웃 */
+#app {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  background: #f5f5f5;
 }
 
-.container {
+/* ===========================================
+   웹 헤더 스타일 (데스크톱/태블릿)
+   =========================================== */
+.web-header {
+  background: #ffffff;
+  border-bottom: 1px solid #e1e5e9;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.web-header-content {
   max-width: 1200px;
   margin: 0 auto;
-  padding: 0 var(--space-4);
   display: flex;
   justify-content: space-between;
   align-items: center;
+  padding: 0 24px;
+  height: 64px;
 }
 
-.header-left {
-  flex: 1;
-}
-
-.brand-link {
-  text-decoration: none;
-  color: inherit;
-}
-
-.brand-logo {
+.web-brand .brand-link {
   display: flex;
   align-items: center;
-  gap: 0.8rem;
+  gap: 8px;
+  text-decoration: none;
+  color: #333;
+}
+
+.brand-icon {
+  font-size: 24px;
+}
+
+.brand-title {
+  font-size: 20px;
+  font-weight: 700;
+  color: #333;
+}
+
+.web-nav {
+  display: flex;
+  gap: 32px;
+}
+
+.web-nav .nav-item {
+  color: #666;
+  text-decoration: none;
+  font-weight: 500;
+  padding: 8px 16px;
+  border-radius: 8px;
+  transition: all 0.2s;
+}
+
+.web-nav .nav-item:hover {
+  background: #f8f9fa;
+  color: #333;
+}
+
+.web-nav .nav-item.router-link-active {
+  background: var(--primary-color, #007bff);
+  color: white;
+}
+
+.web-user-section {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.user-profile-web {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.user-link-web {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  text-decoration: none;
+  color: #333;
+  padding: 6px 12px;
+  border-radius: 8px;
+  transition: background 0.2s;
+}
+
+.user-link-web:hover {
+  background: #f8f9fa;
+}
+
+.user-avatar-web {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.user-avatar-default-web {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #007bff, #0056b3);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.user-name {
+  font-weight: 500;
+  color: #333;
+}
+
+.logout-btn-web,
+.login-btn-web {
+  padding: 8px 16px;
+  border: 1px solid #e1e5e9;
+  background: #ffffff;
+  color: #666;
+  text-decoration: none;
+  border-radius: 8px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.logout-btn-web:hover,
+.login-btn-web:hover {
+  background: #f8f9fa;
+  border-color: #d1d5db;
+}
+
+.login-btn-web {
+  background: var(--primary-color, #007bff);
+  color: white;
+  border-color: var(--primary-color, #007bff);
+}
+
+.login-btn-web:hover {
+  background: var(--secondary-color, #0056b3);
+  border-color: var(--secondary-color, #0056b3);
+}
+
+/* 웹 메인 컨텐츠 */
+.web-content {
+  flex: 1;
+  min-height: calc(100vh - 64px);
+}
+
+/* ===========================================
+   모바일 헤더/네비게이션 스타일
+   =========================================== */
+.mobile-header {
+  background: #ffffff;
+  border-bottom: 1px solid #e1e5e9;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.header-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 16px;
+  max-width: 480px;
+  margin: 0 auto;
+}
+
+.brand-section {
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .brand-emoji {
-  font-size: 1.8rem;
-  animation: bounce 2s infinite;
-}
-
-.brand-text {
-  display: flex;
-  flex-direction: column;
-  gap: 0.2rem;
+  font-size: 20px;
 }
 
 .brand-name {
-  font-size: var(--text-xl);
-  font-weight: var(--font-bold);
-  color: var(--text-primary);
-  letter-spacing: -0.5px;
+  font-size: 18px;
+  font-weight: 600;
+  color: #333;
+  letter-spacing: -0.3px;
 }
 
-.brand-desc {
-  font-size: var(--text-xs);
-  color: var(--text-tertiary);
-  font-weight: var(--font-normal);
-  line-height: var(--leading-tight);
-}
-
-.header-right {
+/* 사용자 섹션 */
+.user-section {
   display: flex;
   align-items: center;
-  gap: var(--space-8);
 }
 
-.nav-menu {
-  display: flex;
-  gap: var(--space-6);
-}
-
-.nav-link {
+.user-profile-mobile {
   display: flex;
   align-items: center;
-  gap: var(--space-2);
+  gap: 8px;
+}
+
+.user-link {
   text-decoration: none;
-  color: var(--text-primary);
-  font-size: var(--text-sm);
-  font-weight: var(--font-medium);
-  padding: var(--space-2) var(--space-3);
-  border-radius: var(--radius-lg);
-  transition: var(--transition-fast);
-  position: relative;
 }
 
-.nav-link:hover,
-.nav-link.router-link-active {
-  color: var(--primary-color);
-  background: var(--bg-tertiary);
-}
-
-.nav-link.router-link-active::after {
-  content: '';
-  position: absolute;
-  bottom: calc(-1 * var(--space-4));
-  left: 50%;
-  transform: translateX(-50%);
-  width: 20px;
-  height: 2px;
-  background: var(--primary-color);
-}
-
-.nav-icon {
-  font-size: 1rem;
-  font-style: normal;
-}
-
-.user-area {
-  display: flex;
-  align-items: center;
-}
-
-.user-profile {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  padding: 0.5rem 0;
-}
-
-.user-info {
-  display: flex;
-  align-items: center;
-  gap: var(--space-3);
-  padding: var(--space-2) var(--space-4);
-  background: var(--bg-secondary);
-  border-radius: var(--radius-full);
-  border: 1px solid var(--border-light);
-  text-decoration: none;
-  color: inherit;
-  transition: var(--transition-fast);
-  cursor: pointer;
-}
-
-.user-info:hover {
-  background: var(--bg-tertiary);
-  border-color: var(--border-medium);
-  transform: translateY(-1px);
-  box-shadow: var(--shadow-sm);
-}
-
-.user-avatar {
+.user-avatar-mobile {
   width: 32px;
   height: 32px;
   border-radius: 50%;
   object-fit: cover;
   border: 2px solid #fff;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
 }
 
-.user-avatar-default {
+.user-avatar-default-mobile {
   width: 32px;
   height: 32px;
-  border-radius: var(--radius-full);
-  background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
-  color: var(--text-white);
+  border-radius: 50%;
+  background: linear-gradient(135deg, #ff6b6b, #4ecdc4);
+  color: white;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-weight: var(--font-semibold);
-  font-size: var(--text-sm);
-  box-shadow: var(--shadow-sm);
+  font-weight: 600;
+  font-size: 14px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
 }
 
-.user-details {
-  display: flex;
-  flex-direction: column;
-  gap: 0.1rem;
-}
-
-.user-nickname {
-  font-size: var(--text-sm);
-  font-weight: var(--font-semibold);
-  color: var(--text-primary);
-  max-width: 80px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.user-provider {
-  font-size: var(--text-xs);
-  color: var(--text-tertiary);
-  font-weight: var(--font-normal);
-}
-
-.logout-btn {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-  padding: var(--space-2) var(--space-3);
-  background: var(--bg-primary);
-  border: 1px solid var(--error-color);
-  border-radius: var(--radius-lg);
-  color: var(--error-color);
-  font-size: var(--text-sm);
-  font-weight: var(--font-medium);
+.logout-btn-mobile {
+  background: none;
+  border: none;
+  padding: 4px;
   cursor: pointer;
-  transition: var(--transition-fast);
+  font-size: 16px;
+  opacity: 0.7;
+  transition: opacity 0.2s;
 }
 
-.logout-btn:hover {
-  background: var(--error-color);
-  color: var(--text-white);
+.logout-btn-mobile:hover {
+  opacity: 1;
 }
 
-.logout-icon {
-  font-size: 0.9rem;
-  font-style: normal;
-}
-
-.login-btn {
+.login-btn-mobile {
   display: flex;
   align-items: center;
-  gap: var(--space-2);
-  padding: var(--space-3) var(--space-5);
-  background: var(--primary-color);
-  color: var(--text-white);
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  background: #ffd93d;
+  border-radius: 50%;
   text-decoration: none;
-  border-radius: var(--radius-lg);
-  font-size: var(--text-sm);
-  font-weight: var(--font-medium);
-  transition: var(--transition-fast);
+  font-size: 16px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  transition: transform 0.2s;
 }
 
-.login-btn:hover {
-  background: var(--primary-hover);
-  transform: translateY(-1px);
+.login-btn-mobile:hover {
+  transform: scale(1.05);
 }
 
-.login-icon {
-  font-size: 1rem;
-  font-style: normal;
-}
-
+/* 메인 컨텐츠 - 공통 */
 .main-content {
-  min-height: calc(100vh - 120px);
-  background: var(--bg-secondary);
   flex: 1;
 }
 
-.footer {
-  background: var(--gray-900);
-  color: var(--text-white);
-  padding: var(--space-8) 0;
-  border-top: 1px solid var(--gray-800);
+/* 모바일 메인 컨텐츠 */
+.mobile-content {
+  padding-bottom: 70px; /* 하단 탭 공간 확보 */
+  min-height: calc(100vh - 140px);
 }
 
-.footer-content {
-  text-align: center;
-}
-
-.footer-logo {
+/* 하단 탭 네비게이션 (카카오톡 스타일) */
+.bottom-nav {
+  position: fixed;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  max-width: 480px;
+  background: #ffffff;
+  border-top: 1px solid #e1e5e9;
   display: flex;
+  justify-content: space-around;
   align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
-  margin-bottom: 1rem;
+  padding: 8px 0 12px 0;
+  box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.1);
+  z-index: 100;
 }
 
-.footer-emoji {
-  font-size: 1.5rem;
+.tab-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  text-decoration: none;
+  color: #999;
+  padding: 4px 8px;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+  min-width: 48px;
 }
 
-.footer-text {
-  font-size: 1.2rem;
-  font-weight: 600;
+.tab-item:hover {
+  background: #f8f9fa;
+  transform: translateY(-1px);
 }
 
-.footer-desc {
-  color: var(--gray-400);
-  margin: 0 0 var(--space-4) 0;
-  font-size: var(--text-sm);
+.tab-item.router-link-active {
+  color: #ffd93d;
 }
 
-.footer-copyright {
-  color: var(--gray-500);
-  margin: 0;
-  font-size: var(--text-xs);
+.tab-item.router-link-active .tab-icon {
+  transform: scale(1.1);
 }
 
-@keyframes bounce {
-  0%, 20%, 50%, 80%, 100% {
-    transform: translateY(0);
-  }
-  40% {
-    transform: translateY(-3px);
-  }
-  60% {
-    transform: translateY(-1px);
-  }
+.tab-icon {
+  font-size: 20px;
+  font-style: normal;
+  transition: transform 0.2s ease;
 }
 
-@media (max-width: 768px) {
-  .header {
-    padding: 0.6rem 0;
-  }
-  
-  .container {
-    flex-direction: column;
-    gap: 1rem;
-    align-items: stretch;
-  }
-  
-  .header-left {
-    text-align: center;
+.tab-label {
+  font-size: 10px;
+  font-weight: 500;
+  line-height: 1;
+  letter-spacing: -0.2px;
+}
+
+/* 반응형 디자인 */
+@media (max-width: 480px) {
+  .header-content {
+    padding: 10px 12px;
   }
   
   .brand-name {
-    font-size: 1.2rem;
+    font-size: 16px;
   }
   
-  .brand-desc {
-    font-size: 0.7rem;
+  .brand-emoji {
+    font-size: 18px;
   }
   
-  .header-right {
-    flex-direction: column;
-    gap: 1rem;
-    align-items: center;
-  }
-  
-  .nav-menu {
-    justify-content: center;
-    gap: 1rem;
-  }
-  
-  .nav-link {
-    font-size: 0.8rem;
-    padding: 0.4rem 0.6rem;
-  }
-  
-  .user-info {
-    padding: 0.4rem 0.8rem;
-  }
-  
-  .user-nickname {
-    max-width: 60px;
-    font-size: 0.8rem;
-  }
-  
-  .user-avatar,
-  .user-avatar-default {
+  .user-avatar-mobile,
+  .user-avatar-default-mobile {
     width: 28px;
     height: 28px;
   }
   
-  .logout-btn {
-    padding: 0.4rem 0.6rem;
-    font-size: 0.8rem;
+  .login-btn-mobile {
+    width: 32px;
+    height: 32px;
+    font-size: 14px;
   }
   
-  .login-btn {
-    padding: 0.5rem 1rem;
-    font-size: 0.85rem;
+  .bottom-nav {
+    padding: 6px 0 10px 0;
+  }
+  
+  .tab-icon {
+    font-size: 18px;
+  }
+  
+  .tab-label {
+    font-size: 9px;
+  }
+  
+  .main-content {
+    padding-bottom: 65px;
   }
 }
 
-#app {
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
+/* 모바일 전용 스타일 (모바일 플랫폼에서만 적용) */
+@media (min-width: 481px) {
+  .mobile-header,
+  .bottom-nav {
+    max-width: 480px;
+    margin: 0 auto;
+  }
+  
+  .mobile-content {
+    max-width: 480px;
+    margin: 0 auto;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+  }
 }
-</style>
+
+/* 모바일 플랫폼에서만 적용되는 큰 화면 스타일 */
+@media (min-width: 768px) {
+  .mobile-content {
+    background: #f5f5f5;
+    margin-top: 20px;
+    margin-bottom: 20px;
+    border-radius: 12px;
+    overflow: hidden;
+    padding-bottom: 0;
+  }
+  
+  .mobile-header {
+    border-radius: 12px 12px 0 0;
+  }
+  
+  .bottom-nav {
+    border-radius: 0 0 12px 12px;
+    position: relative;
+    bottom: auto;
+    transform: none;
+    margin: 0 auto;
+  }
+}</style>

@@ -1,6 +1,7 @@
 package com.drink.balancegame.security;
 
 import com.drink.balancegame.entity.User;
+import com.drink.balancegame.entity.UserRole;
 import com.drink.balancegame.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -101,7 +102,7 @@ public class CustomUserDetailsService extends DefaultOAuth2UserService implement
                 .profileImageUrl(oauth2UserInfo.getImageUrl())
                 .provider(User.Provider.valueOf(userRequest.getClientRegistration().getRegistrationId().toUpperCase()))
                 .providerId(oauth2UserInfo.getId())
-                .role(User.Role.USER)
+                .role(UserRole.USER)
                 .build();
         
         return userRepository.save(user);

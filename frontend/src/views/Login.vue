@@ -1,98 +1,96 @@
 <!--
-  술하재밸 로그인 페이지
-  OAuth 소셜 로그인 + 테스트 로그인 제공
+  웹 전용 로그인 페이지
+  데스크톱/태블릿용 OAuth 소셜 로그인 + 테스트 로그인 제공
 -->
 <template>
-  <div class="login">
-    <div class="container">
-      <div class="login-card">
-        <div class="login-header">
-          <h1>
-            <span class="login-emoji">🍻</span>
-            술하재밸 로그인
-          </h1>
-          <p class="login-subtitle">소셜 로그인으로 간편하게 시작하세요!</p>
-        </div>
-        
-        <!-- 소셜 로그인 버튼들 -->
-        <div class="social-login">
-          <button 
-            @click="socialLogin('google')"
-            class="social-btn google-btn"
-            :disabled="loading"
-          >
-            <span class="social-icon">🔍</span>
-            Google로 시작하기
-          </button>
-          
-          <button 
-            @click="socialLogin('kakao')"
-            class="social-btn kakao-btn"
-            :disabled="loading"
-          >
-            <span class="social-icon">💬</span>
-            카카오로 시작하기
-          </button>
-          
-          <button 
-            @click="socialLogin('naver')"
-            class="social-btn naver-btn"
-            :disabled="loading"
-          >
-            <span class="social-icon">🟢</span>
-            네이버로 시작하기
-          </button>
-        </div>
-
-        <!-- 구분선 -->
-        <div class="divider">
-          <span>또는</span>
-        </div>
-
-        <!-- 테스트 로그인 -->
-        <div class="test-login">
-          <h3>🧪 테스트 로그인</h3>
-          <p class="test-description">개발용 테스트 계정으로 빠르게 체험해보세요!</p>
-          
-          <div class="test-accounts">
-            <button 
-              @click="testLogin('google_user1')"
-              class="test-btn"
-              :disabled="loading"
-            >
-              <span class="test-icon">👤</span>
-              테스터1 (구글)
-            </button>
-            
-            <button 
-              @click="testLogin('kakao_user2')"
-              class="test-btn"
-              :disabled="loading"
-            >
-              <span class="test-icon">💬</span>
-              테스터2 (카카오)
-            </button>
-            
-            <button 
-              @click="testLogin('naver_user3')"
-              class="test-btn"
-              :disabled="loading"
-            >
-              <span class="test-icon">🟢</span>
-              테스터3 (네이버)
-            </button>
-          </div>
-        </div>
-
-        <div v-if="error" class="error-message">
-          {{ error }}
-        </div>
-
-        <div class="login-footer">
-          <p>🎮 술자리가 더 재밌어지는 밸런스 게임! 🎮</p>
+  <div class="login-page">
+    <!-- 페이지 헤더 -->
+    <section class="page-header">
+      <div class="header-container">
+        <div class="header-content">
+          <div class="header-icon">🍻</div>
+          <h1 class="page-title">술하재밸 로그인</h1>
+          <p class="page-subtitle">술 마실 때 재밌는 밸런스 게임에 참여해보세요!</p>
         </div>
       </div>
-    </div>
+    </section>
+
+    <!-- 메인 콘텐츠 -->
+    <main class="main-content">
+      <div class="container">
+        <div class="login-container">
+          <!-- 소셜 로그인 섹션 -->
+          <div class="login-section">
+            <div class="section-header">
+              <div class="section-icon">🔐</div>
+              <h2>소셜 로그인</h2>
+              <p>간편하고 안전한 소셜 로그인을 이용해보세요</p>
+            </div>
+            
+            <div class="social-buttons">
+              <button @click="socialLogin('google')" class="social-btn google-btn" :disabled="loading">
+                <span class="btn-icon">🔴</span>
+                <span class="btn-text">Google로 로그인</span>
+              </button>
+              <button @click="socialLogin('kakao')" class="social-btn kakao-btn" :disabled="loading">
+                <span class="btn-icon">💬</span>
+                <span class="btn-text">카카오로 로그인</span>
+              </button>
+              <button @click="socialLogin('naver')" class="social-btn naver-btn" :disabled="loading">
+                <span class="btn-icon">🟢</span>
+                <span class="btn-text">네이버로 로그인</span>
+              </button>
+            </div>
+          </div>
+          
+          <!-- 구분선 -->
+          <div class="divider">
+            <div class="divider-line"></div>
+            <div class="divider-text">또는</div>
+            <div class="divider-line"></div>
+          </div>
+          
+          <!-- 테스트 로그인 섹션 -->
+          <div class="test-section">
+            <div class="section-header">
+              <div class="section-icon">🧪</div>
+              <h2>테스트 로그인</h2>
+              <p>개발용 테스트 계정으로 빠르게 체험해보세요</p>
+            </div>
+            
+            <div class="test-buttons">
+              <button @click="testLogin('google_user1')" class="test-btn" :disabled="loading">
+                <span class="test-icon">👤</span>
+                <span class="test-info">
+                  <span class="test-name">테스터1</span>
+                  <span class="test-provider">Google 계정</span>
+                </span>
+              </button>
+              <button @click="testLogin('kakao_user2')" class="test-btn" :disabled="loading">
+                <span class="test-icon">👤</span>
+                <span class="test-info">
+                  <span class="test-name">테스터2</span>
+                  <span class="test-provider">카카오 계정</span>
+                </span>
+              </button>
+              <button @click="testLogin('naver_user3')" class="test-btn" :disabled="loading">
+                <span class="test-icon">👤</span>
+                <span class="test-info">
+                  <span class="test-name">테스터3</span>
+                  <span class="test-provider">네이버 계정</span>
+                </span>
+              </button>
+            </div>
+          </div>
+          
+          <!-- 에러 메시지 -->
+          <div v-if="error" class="error-message">
+            <span class="error-icon">⚠️</span>
+            {{ error }}
+          </div>
+        </div>
+      </div>
+    </main>
   </div>
 </template>
 
@@ -100,7 +98,7 @@
 /**
  * 술하재밸 로그인 페이지 로직
  */
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '../stores/auth'
 import axios from 'axios'
@@ -110,6 +108,7 @@ const authStore = useAuthStore()
 
 const loading = ref(false)
 const error = ref('')
+
 
 /**
  * 소셜 로그인 처리
@@ -123,14 +122,14 @@ const socialLogin = (provider) => {
 }
 
 /**
- * 테스트 로그인 처리
+ * 테스트 로그인 처리 (웹 API)
  */
 const testLogin = async (username) => {
   loading.value = true
   error.value = ''
 
   try {
-    const response = await axios.post('/api/auth/test-login', {
+    const response = await axios.post('/api/web/auth/test-login', {
       username: username,
       password: 'test' // 테스트용 비밀번호
     })
@@ -151,242 +150,391 @@ const testLogin = async (username) => {
 </script>
 
 <style scoped>
-/* 블라인드 스타일 로그인 페이지 */
-.login {
-  min-height: 70vh;
+/* 로그인 페이지 - 완전한 웹사이트 스타일 */
+.login-page {
+  background: #ffffff;
+  min-height: 100vh;
+}
+
+/* 페이지 헤더 */
+.page-header {
+  background: #f8fafc;
+  padding: 80px 0;
+  position: relative;
   display: flex;
-  align-items: center;
-  padding: 2rem 0;
-  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+  justify-content: center;
 }
 
-.container {
-  max-width: 500px;
+.page-header .header-container {
+  background: linear-gradient(135deg, #FF6B35 0%, #F7931E 50%, #FFD23F 100%);
+  border-radius: 30px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.15);
+  position: relative;
+  overflow: hidden;
+}
+
+.page-header .header-container::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(ellipse at center, rgba(255,255,255,0.15) 0%, transparent 70%);
+  pointer-events: none;
+  z-index: 1;
+}
+
+.header-container {
+  max-width: 1200px;
   margin: 0 auto;
-  padding: 0 1rem;
+  padding: 60px 80px;
+  position: relative;
+  z-index: 2;
+  color: white;
 }
 
-.login-card {
-  background: white;
-  padding: 2.5rem;
-  border-radius: 20px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+.header-icon {
+  font-size: 3rem;
+  margin-bottom: 16px;
+  display: block;
+  filter: drop-shadow(0 4px 8px rgba(0,0,0,0.3));
+}
+
+.header-content {
   text-align: center;
 }
 
-.login-header h1 {
-  margin: 0 0 1rem 0;
-  color: #2c3e50;
-  font-size: 2rem;
-  font-weight: 700;
+.page-title {
+  font-size: 2.4rem;
+  font-weight: 800;
+  line-height: 1.2;
+  margin-bottom: 16px;
+  text-shadow: 0 4px 20px rgba(0,0,0,0.3);
+  background: linear-gradient(45deg, #ffffff, #e8f4fd);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 
-.login-emoji {
-  font-size: 2.5rem;
-  margin-right: 0.5rem;
-  animation: bounce 2s infinite;
-}
-
-.login-subtitle {
-  color: #7f8c8d;
-  margin: 0 0 2rem 0;
+.page-subtitle {
   font-size: 1.1rem;
+  font-weight: 400;
+  opacity: 0.95;
+  line-height: 1.4;
+  max-width: 600px;
+  margin: 0 auto;
 }
 
-.social-login {
+/* 메인 콘텐츠 */
+.main-content {
+  padding: 60px 0;
+  background: #f8fafc;
+}
+
+.container {
+  max-width: 600px;
+  margin: 0 auto;
+  padding: 0 60px;
+}
+
+.login-container {
+  background: white;
+  border-radius: 20px;
+  box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+  border: 1px solid #e2e8f0;
+  overflow: hidden;
+}
+
+/* 섹션 헤더 */
+.section-header {
+  text-align: center;
+  margin-bottom: 30px;
+}
+
+.section-icon {
+  font-size: 2.5rem;
+  margin-bottom: 16px;
+  display: block;
+}
+
+.section-header h2 {
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: #1a202c;
+  margin-bottom: 8px;
+}
+
+.section-header p {
+  color: #64748b;
+  font-size: 1rem;
+  margin: 0;
+}
+
+/* 로그인 섹션 */
+.login-section {
+  padding: 40px;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.social-buttons {
   display: flex;
   flex-direction: column;
-  gap: 1rem;
-  margin-bottom: 2rem;
+  gap: 16px;
 }
 
 .social-btn {
   display: flex;
   align-items: center;
-  justify-content: center;
-  gap: 0.8rem;
-  padding: 1rem 1.5rem;
+  gap: 16px;
+  padding: 16px 24px;
   border: none;
   border-radius: 12px;
-  font-size: 1rem;
   font-weight: 600;
+  font-size: 1rem;
   cursor: pointer;
   transition: all 0.3s ease;
-  text-decoration: none;
+  font-family: inherit;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+}
+
+.social-btn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(0,0,0,0.15);
 }
 
 .social-btn:disabled {
-  opacity: 0.7;
+  opacity: 0.6;
   cursor: not-allowed;
+  transform: none;
+}
+
+.btn-icon {
+  font-size: 1.2rem;
+}
+
+.btn-text {
+  flex: 1;
+  text-align: center;
 }
 
 .google-btn {
-  background: #4285f4;
+  background: linear-gradient(135deg, #4285f4, #34a853);
   color: white;
 }
 
 .google-btn:hover:not(:disabled) {
-  background: #357ae8;
-  transform: translateY(-2px);
+  background: linear-gradient(135deg, #3367d6, #2e7d32);
 }
 
 .kakao-btn {
-  background: #fee500;
-  color: #3c1e1e;
+  background: linear-gradient(135deg, #fee500, #fdd835);
+  color: #333;
 }
 
 .kakao-btn:hover:not(:disabled) {
-  background: #fada0a;
-  transform: translateY(-2px);
+  background: linear-gradient(135deg, #fbc02d, #f57f17);
 }
 
 .naver-btn {
-  background: #03c75a;
+  background: linear-gradient(135deg, #03c75a, #00c853);
   color: white;
 }
 
 .naver-btn:hover:not(:disabled) {
-  background: #02b34a;
-  transform: translateY(-2px);
+  background: linear-gradient(135deg, #00a152, #2e7d32);
 }
 
-.social-icon {
-  font-size: 1.3rem;
-}
-
+/* 구분선 */
 .divider {
-  position: relative;
-  margin: 2rem 0;
-  text-align: center;
-  color: #95a5a6;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  padding: 30px 40px;
 }
 
-.divider::before {
-  content: '';
-  position: absolute;
-  top: 50%;
-  left: 0;
-  right: 0;
+.divider-line {
+  flex: 1;
   height: 1px;
-  background: #ecf0f1;
+  background: #e2e8f0;
 }
 
-.divider span {
-  background: white;
-  padding: 0 1rem;
-  font-weight: 500;
-}
-
-.test-login {
-  background: #f8f9fa;
-  padding: 1.5rem;
-  border-radius: 15px;
-  margin-bottom: 1.5rem;
-}
-
-.test-login h3 {
-  margin: 0 0 0.5rem 0;
-  color: #2c3e50;
-  font-size: 1.2rem;
-}
-
-.test-description {
-  color: #7f8c8d;
-  margin: 0 0 1.5rem 0;
+.divider-text {
+  color: #64748b;
+  font-weight: 600;
   font-size: 0.9rem;
+  background: white;
+  padding: 0 16px;
 }
 
-.test-accounts {
+/* 테스트 섹션 */
+.test-section {
+  padding: 40px;
+}
+
+.test-buttons {
   display: flex;
   flex-direction: column;
-  gap: 0.8rem;
+  gap: 16px;
 }
 
 .test-btn {
   display: flex;
   align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
-  padding: 0.8rem 1rem;
-  border: 2px solid #e9ecef;
-  border-radius: 10px;
-  background: white;
-  color: #495057;
-  font-weight: 600;
+  gap: 16px;
+  padding: 16px 24px;
+  background: #f8fafc;
+  border: 2px solid #e2e8f0;
+  border-radius: 12px;
   cursor: pointer;
   transition: all 0.3s ease;
+  font-family: inherit;
 }
 
 .test-btn:hover:not(:disabled) {
-  border-color: #667eea;
-  background: #f8f9ff;
-  transform: translateY(-1px);
+  background: #f1f5f9;
+  border-color: #cbd5e0;
+  transform: translateY(-2px);
+  box-shadow: 0 5px 20px rgba(0,0,0,0.1);
 }
 
 .test-btn:disabled {
-  opacity: 0.7;
+  opacity: 0.6;
   cursor: not-allowed;
+  transform: none;
 }
 
 .test-icon {
-  font-size: 1.1rem;
+  font-size: 1.5rem;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #e2e8f0;
+  border-radius: 50%;
 }
 
+.test-info {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  flex: 1;
+}
+
+.test-name {
+  font-weight: 600;
+  color: #1a202c;
+  font-size: 1rem;
+  margin-bottom: 4px;
+}
+
+.test-provider {
+  font-size: 0.85rem;
+  color: #64748b;
+}
+
+/* 에러 메시지 */
 .error-message {
-  background: #ffe6e6;
-  color: #d63384;
-  padding: 1rem;
-  border-radius: 10px;
-  margin-bottom: 1rem;
-  border: 1px solid #f5c6cb;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: linear-gradient(135deg, #fee2e2, #fecaca);
+  color: #dc2626;
+  padding: 16px 24px;
+  margin: 20px 40px 40px;
+  border-radius: 12px;
+  border: 2px solid #fca5a5;
+  font-size: 0.95rem;
+  font-weight: 500;
 }
 
-.login-footer {
-  margin-top: 1.5rem;
-  padding-top: 1.5rem;
-  border-top: 1px solid #ecf0f1;
-  color: #95a5a6;
-  font-size: 0.9rem;
+.error-icon {
+  font-size: 1.2rem;
 }
 
-@keyframes bounce {
-  0%, 20%, 50%, 80%, 100% {
-    transform: translateY(0);
+/* 반응형 디자인 */
+@media (max-width: 1024px) {
+  .header-container,
+  .container {
+    padding: 0 30px;
   }
-  40% {
-    transform: translateY(-10px);
-  }
-  60% {
-    transform: translateY(-5px);
+  
+  .page-title {
+    font-size: 2rem;
   }
 }
 
 @media (max-width: 768px) {
-  .login-card {
-    margin: 0 1rem;
-    padding: 2rem;
+  .page-header {
+    padding: 40px 0;
   }
   
-  .login-header h1 {
-    font-size: 1.7rem;
+  .header-container,
+  .container {
+    padding: 0 20px;
   }
   
-  .login-emoji {
-    font-size: 2rem;
+  .page-title {
+    font-size: 1.8rem;
   }
   
-  .social-btn {
-    padding: 0.9rem 1.2rem;
+  .page-subtitle {
+    font-size: 1rem;
+  }
+  
+  .login-container {
+    border-radius: 16px;
+  }
+  
+  .login-section,
+  .test-section {
+    padding: 30px 20px;
+  }
+  
+  .divider {
+    padding: 20px;
+  }
+  
+  .error-message {
+    margin: 20px 20px 30px;
+  }
+  
+  .social-btn,
+  .test-btn {
+    padding: 14px 20px;
+  }
+  
+  .btn-text {
+    font-size: 0.95rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .container {
+    max-width: none;
+  }
+  
+  .social-buttons,
+  .test-buttons {
+    gap: 12px;
+  }
+  
+  .social-btn,
+  .test-btn {
+    padding: 12px 16px;
+  }
+  
+  .test-info {
+    gap: 2px;
+  }
+  
+  .test-name {
     font-size: 0.95rem;
   }
   
-  .test-accounts {
-    gap: 0.6rem;
-  }
-  
-  .test-btn {
-    padding: 0.7rem 0.8rem;
-    font-size: 0.9rem;
+  .test-provider {
+    font-size: 0.8rem;
   }
 }
 </style>
