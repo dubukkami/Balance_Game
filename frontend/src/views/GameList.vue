@@ -1,183 +1,182 @@
-<!--
-  게임 목록 페이지 컴포넌트
-  모든 밸런스 게임을 페이징과 정렬 기능으로 표시
--->
 <template>
-  <div class="game-list">
-    <div class="container">
-      <h1>밸런스 게임 목록</h1>
-      
-      <!-- 필터 및 정렬 옵션 -->
-      <div class="filters">
-        <div class="search-box">
-          <input 
-            v-model="searchTerm"
-            type="text"
-            placeholder="게임 제목 검색..."
-            class="form-control"
-            @keyup.enter="searchGames"
-          />
-          <button @click="searchGames" class="btn btn-primary">
-            검색
-          </button>
-        </div>
-        
-        <div class="sort-options">
-          <label>정렬:</label>
-          <select v-model="sortBy" @change="fetchGames" class="form-control">
-            <option value="latest">최신순</option>
-            <option value="popular">인기순</option>
-            <option value="votes">투표순</option>
-          </select>
+  <div class="game-list-page">
+    <!-- 페이지 헤더 -->
+    <section class="page-header">
+      <div class="header-container">
+        <div class="header-content">
+          <div class="header-icon">🍻</div>
+          <h1 class="page-title">술하재밸 게임 목록</h1>
+          <p class="page-subtitle">친구들과 함께 즐기는 모든 밸런스 게임!</p>
         </div>
       </div>
+    </section>
 
-      <!-- 게임 목록 -->
-      <div v-if="loading" class="loading">
-        <p>게임을 불러오는 중...</p>
-      </div>
+    <!-- 메인 콘텐츠 -->
+    <main class="main-content">
+      <div class="container">
 
-      <div v-else-if="games.length > 0" class="games-container">
-        <div 
-          v-for="game in games" 
-          :key="game.id"
-          class="game-item"
-          @click="goToGame(game.id)"
-        >
-          <div class="game-header">
-            <h3>{{ game.title }}</h3>
-            <div class="game-stats">
-              <span class="stat">
-                👁️ {{ game.viewCount }}
-              </span>
-              <span class="stat">
-                🗳️ {{ game.totalVotes }}
-              </span>
-              <span class="stat">
-                💬 {{ game.commentCount }}
-              </span>
+        <!-- 검색 및 필터 섹션 -->
+        <section class="filters-section">
+          <div class="filters-container">
+            <div class="search-section">
+              <div class="search-box">
+                <input 
+                  v-model="searchTerm"
+                  type="text"
+                  placeholder="게임 제목으로 검색..."
+                  class="search-input"
+                  @keyup.enter="searchGames"
+                />
+                <button @click="searchGames" class="search-btn">
+                  <span>🔍</span>
+                  검색
+                </button>
+              </div>
+            </div>
+            
+            <div class="sort-section">
+              <label class="sort-label">정렬:</label>
+              <select v-model="sortBy" @change="changeSortBy(sortBy)" class="sort-select">
+                <option v-for="option in sortOptions" :key="option.value" :value="option.value">
+                  {{ option.label }}
+                </option>
+              </select>
             </div>
           </div>
+        </section>
 
-          <div class="game-description" v-if="game.description">
-            <p>{{ game.description }}</p>
-          </div>
+        <!-- 로딩 상태 -->
+        <div v-if="loading" class="loading-section">
+          <div class="loading-spinner"></div>
+          <p class="loading-text">게임을 불러오는 중...</p>
+        </div>
 
-          <div class="game-options">
-            <div class="option option-a">
-              <div class="option-content">
-                <h4>{{ game.optionA }}</h4>
-                <p v-if="game.optionADescription">{{ game.optionADescription }}</p>
-              </div>
-              <div class="vote-stats">
-                <span class="vote-count">{{ game.optionAVotes }}표</span>
-                <div class="vote-bar">
-                  <div 
-                    class="vote-fill"
-                    :style="{ width: getVotePercentage(game.optionAVotes, game.totalVotes) + '%' }"
-                  ></div>
+        <!-- 게임 목록 -->
+        <section v-else-if="games.length > 0" class="games-section">
+          <div class="games-grid">
+            <div 
+              v-for="game in games" 
+              :key="game.id"
+              class="game-item"
+              @click="goToGame(game.id)"
+            >
+              <div class="game-content">
+                <div class="game-header">
+                  <h3 class="game-title">{{ game.title }}</h3>
+                  <div class="game-meta">
+                    <span class="meta-item">👀 {{ game.viewCount }}</span>
+                    <span class="meta-item">🗳 {{ game.totalVotes }}</span>
+                    <span class="meta-item">💬 {{ game.commentCount }}</span>
+                  </div>
+                </div>
+                
+                <div class="game-choices">
+                  <div class="choice choice-a">
+                    <div class="choice-text">{{ game.optionA }}</div>
+                    <div class="choice-stats">
+                      <div class="vote-bar">
+                        <div class="vote-fill-a" :style="{ width: getVotePercentage(game.optionAVotes, game.totalVotes) + '%' }"></div>
+                      </div>
+                      <span class="vote-percent">{{ getVotePercentage(game.optionAVotes, game.totalVotes).toFixed(0) }}%</span>
+                    </div>
+                  </div>
+                  
+                  <div class="vs-separator">VS</div>
+                  
+                  <div class="choice choice-b">
+                    <div class="choice-text">{{ game.optionB }}</div>
+                    <div class="choice-stats">
+                      <div class="vote-bar">
+                        <div class="vote-fill-b" :style="{ width: getVotePercentage(game.optionBVotes, game.totalVotes) + '%' }"></div>
+                      </div>
+                      <span class="vote-percent">{{ getVotePercentage(game.optionBVotes, game.totalVotes).toFixed(0) }}%</span>
+                    </div>
+                  </div>
+                </div>
+                
+                <div class="game-footer">
+                  <div class="author-info">👤 {{ game.authorUsername }}</div>
+                  <div class="date-info">📅 {{ formatDate(game.createdAt) }}</div>
+                  <div class="like-info">❤️ {{ game.likeCount || 0 }}</div>
                 </div>
               </div>
             </div>
-
-            <div class="vs-divider">VS</div>
-
-            <div class="option option-b">
-              <div class="option-content">
-                <h4>{{ game.optionB }}</h4>
-                <p v-if="game.optionBDescription">{{ game.optionBDescription }}</p>
-              </div>
-              <div class="vote-stats">
-                <span class="vote-count">{{ game.optionBVotes }}표</span>
-                <div class="vote-bar">
-                  <div 
-                    class="vote-fill"
-                    :style="{ width: getVotePercentage(game.optionBVotes, game.totalVotes) + '%' }"
-                  ></div>
-                </div>
-              </div>
-            </div>
           </div>
+        </section>
 
-          <div class="game-meta">
-            <span>작성자: {{ game.authorUsername }}</span>
-            <span>{{ formatDate(game.createdAt) }}</span>
+        <!-- 빈 상태 -->
+        <section v-else class="empty-section">
+          <div class="empty-content">
+            <div class="empty-icon">🎮</div>
+            <h3 class="empty-title">게임이 없습니다</h3>
+            <p class="empty-description">첫 번째 밸런스 게임을 만들어보세요!</p>
+            <router-link to="/create" class="btn-create" v-if="authStore.isLoggedIn">
+              게임 만들기
+            </router-link>
           </div>
-          
-          <div class="game-stats">
-            <span>조회수: {{ game.viewCount }}</span>
-            <span>댓글: {{ game.commentCount }}</span>
-            <span>추천: {{ game.likeCount || 0 }}</span>
-          </div>
-        </div>
+        </section>
 
-        <!-- 페이지네이션 -->
-        <div class="pagination" v-if="totalPages > 1">
-          <button 
-            @click="goToPage(currentPage - 1)"
-            :disabled="currentPage === 0"
-            class="btn btn-secondary"
-          >
-            이전
+        <!-- 더 보기 섹션 -->
+        <section v-if="hasMore && games.length > 0" class="load-more-section">
+          <button @click="loadMoreGames" class="load-more-btn" :disabled="loading">
+            {{ loading ? '로딩 중...' : '더 보기' }}
           </button>
-          
-          <span class="page-info">
-            {{ currentPage + 1 }} / {{ totalPages }}
-          </span>
-          
-          <button 
-            @click="goToPage(currentPage + 1)"
-            :disabled="currentPage === totalPages - 1"
-            class="btn btn-secondary"
-          >
-            다음
-          </button>
-        </div>
+        </section>
       </div>
-
-      <div v-else class="no-games">
-        <p>게임이 없습니다.</p>
-        <router-link to="/create" class="btn btn-primary">
-          첫 번째 게임 만들기
-        </router-link>
-      </div>
-    </div>
+    </main>
   </div>
 </template>
 
 <script setup>
-/**
- * 게임 목록 페이지 컴포넌트 로직
- */
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
+import { useAuthStore } from '@/stores/auth'
 import axios from 'axios'
 
 const router = useRouter()
+const authStore = useAuthStore()
 
 // 반응형 데이터
 const games = ref([])
 const loading = ref(false)
 const currentPage = ref(0)
-const totalPages = ref(0)
 const sortBy = ref('latest')
 const searchTerm = ref('')
+const hasMore = ref(true)
+
+
+// 정렬 옵션
+const sortOptions = [
+  { value: 'latest', label: '최신순' },
+  { value: 'popular', label: '인기순' },
+  { value: 'votes', label: '투표순' }
+]
 
 /**
- * 게임 목록 조회
+ * 게임 목록 조회 (웹 API)
  */
-const fetchGames = async () => {
+const fetchGames = async (reset = true) => {
+  if (loading.value) return
+  
   loading.value = true
   try {
     const params = {
-      page: currentPage.value,
+      page: reset ? 0 : currentPage.value,
       size: 10,
       sort: sortBy.value
     }
     
-    const response = await axios.get('/api/balance-games', { params })
-    games.value = response.data.content
-    totalPages.value = response.data.totalPages
+    const response = await axios.get('/api/web/balance-games', { params })
+    
+    if (reset) {
+      games.value = response.data.content
+      currentPage.value = 0
+    } else {
+      games.value.push(...response.data.content)
+    }
+    
+    hasMore.value = !response.data.last
+    currentPage.value = response.data.number
   } catch (error) {
     console.error('게임 목록 조회 실패:', error)
   } finally {
@@ -186,11 +185,29 @@ const fetchGames = async () => {
 }
 
 /**
- * 게임 검색
+ * 정렬 변경
+ */
+const changeSortBy = (newSort) => {
+  sortBy.value = newSort
+  fetchGames(true)
+}
+
+/**
+ * 더 많은 게임 로드
+ */
+const loadMoreGames = () => {
+  if (hasMore.value && !loading.value) {
+    currentPage.value += 1
+    fetchGames(false)
+  }
+}
+
+/**
+ * 게임 검색 (웹 API)
  */
 const searchGames = async () => {
   if (!searchTerm.value.trim()) {
-    fetchGames()
+    fetchGames(true)
     return
   }
   
@@ -202,24 +219,14 @@ const searchGames = async () => {
       size: 10
     }
     
-    const response = await axios.get('/api/balance-games/search', { params })
+    const response = await axios.get('/api/web/balance-games/search', { params })
     games.value = response.data.content
-    totalPages.value = response.data.totalPages
+    hasMore.value = !response.data.last
     currentPage.value = 0
   } catch (error) {
     console.error('게임 검색 실패:', error)
   } finally {
     loading.value = false
-  }
-}
-
-/**
- * 페이지 이동
- */
-const goToPage = (page) => {
-  if (page >= 0 && page < totalPages.value) {
-    currentPage.value = page
-    fetchGames()
   }
 }
 
@@ -241,274 +248,560 @@ const getVotePercentage = (votes, total) => {
  * 날짜 포맷팅
  */
 const formatDate = (dateString) => {
-  return new Date(dateString).toLocaleDateString('ko-KR')
+  const date = new Date(dateString)
+  const now = new Date()
+  const diffTime = Math.abs(now - date)
+  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
+  
+  if (diffDays === 1) return '오늘'
+  if (diffDays === 2) return '어제'
+  if (diffDays <= 7) return `${diffDays}일 전`
+  return date.toLocaleDateString('ko-KR', { month: 'short', day: 'numeric' })
 }
 
 // 컴포넌트 마운트 시 데이터 로드
 onMounted(() => {
-  fetchGames()
+  fetchGames(true)
 })
 </script>
 
 <style scoped>
-@import '../styles/variables.css';
-
-.game-list {
-  padding: var(--space-8) 0;
+/* 게임 목록 페이지 - 완전한 웹사이트 스타일 */
+.game-list-page {
+  background: #ffffff;
+  min-height: 100vh;
 }
 
-.game-list h1 {
+/* 페이지 헤더 */
+.page-header {
+  background: #f8fafc;
+  padding: 80px 0;
+  position: relative;
+  display: flex;
+  justify-content: center;
+}
+
+.page-header .header-container {
+  background: linear-gradient(135deg, #FF6B35 0%, #F7931E 50%, #FFD23F 100%);
+  border-radius: 30px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.15);
+  position: relative;
+  overflow: hidden;
+}
+
+.page-header .header-container::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(ellipse at center, rgba(255,255,255,0.15) 0%, transparent 70%);
+  pointer-events: none;
+  z-index: 1;
+}
+
+.header-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 60px 80px;
+  position: relative;
+  z-index: 2;
+  color: white;
+}
+
+.header-content {
   text-align: center;
-  margin-bottom: var(--space-8);
-  color: var(--text-primary);
-  font-size: var(--text-3xl);
-  font-weight: var(--font-bold);
 }
 
-.filters {
+.header-icon {
+  font-size: 3rem;
+  margin-bottom: 16px;
+  display: block;
+  filter: drop-shadow(0 4px 8px rgba(0,0,0,0.3));
+}
+
+.page-title {
+  font-size: 2.2rem;
+  font-weight: 900;
+  line-height: 1.2;
+  margin-bottom: 16px;
+  text-shadow: 0 4px 15px rgba(0,0,0,0.4);
+  color: white;
+}
+
+.page-subtitle {
+  font-size: 1.1rem;
+  font-weight: 500;
+  opacity: 0.95;
+  line-height: 1.4;
+  max-width: 500px;
+  margin: 0 auto;
+}
+
+/* 메인 콘텐츠 */
+.main-content {
+  padding: 60px 0;
+  background: #f8fafc;
+}
+
+.container {
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 0 40px;
+}
+
+/* 필터 섹션 */
+.filters-section {
+  margin-bottom: 50px;
+}
+
+.filters-container {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: var(--space-8);
-  gap: var(--space-4);
-  padding: var(--space-6);
-  background: var(--bg-primary);
-  border-radius: var(--radius-xl);
-  box-shadow: var(--shadow-sm);
-  border: 1px solid var(--border-light);
+  background: white;
+  padding: 30px;
+  border-radius: 15px;
+  box-shadow: 0 5px 25px rgba(0,0,0,0.08);
+  border: 1px solid #e2e8f0;
+}
+
+.search-section {
+  flex: 1;
+  max-width: 500px;
 }
 
 .search-box {
   display: flex;
-  gap: var(--space-2);
-  flex: 1;
-  max-width: 400px;
+  gap: 12px;
+  align-items: center;
 }
 
-.sort-options {
+.search-input {
+  flex: 1;
+  padding: 12px 18px;
+  border: 2px solid #e2e8f0;
+  border-radius: 25px;
+  font-size: 1rem;
+  background: #f8fafc;
+  transition: all 0.3s ease;
+}
+
+.search-input:focus {
+  outline: none;
+  border-color: #FF6B35;
+  background: white;
+  box-shadow: 0 0 0 3px rgba(255, 107, 53, 0.1);
+}
+
+.search-btn {
   display: flex;
   align-items: center;
-  gap: var(--space-2);
+  gap: 8px;
+  padding: 12px 24px;
+  background: linear-gradient(135deg, #FF6B35, #F7931E);
+  color: white;
+  border: none;
+  border-radius: 25px;
+  font-weight: 600;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(255, 107, 53, 0.3);
 }
 
-.sort-options label {
-  font-weight: var(--font-medium);
-  color: var(--text-secondary);
-  font-size: var(--text-sm);
+.search-btn:hover {
+  background: linear-gradient(135deg, #E55A2B, #E8860D);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(255, 107, 53, 0.4);
 }
 
-.sort-options select {
-  width: 120px;
+.search-btn span {
+  font-size: 1.1rem;
 }
 
-.loading {
+.sort-section {
   display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.sort-label {
+  font-weight: 600;
+  color: #4a5568;
+  font-size: 1rem;
+}
+
+.sort-select {
+  padding: 10px 16px;
+  border: 2px solid #e2e8f0;
+  border-radius: 10px;
+  font-size: 1rem;
+  background: white;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  min-width: 120px;
+}
+
+.sort-select:focus {
+  outline: none;
+  border-color: #FF6B35;
+  box-shadow: 0 0 0 3px rgba(255, 107, 53, 0.1);
+}
+
+/* 로딩 섹션 */
+.loading-section {
+  display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: var(--space-20);
-  color: var(--text-secondary);
+  padding: 80px 40px;
+  background: white;
+  border-radius: 15px;
+  border: 1px solid #e2e8f0;
 }
 
-.games-container {
+.loading-spinner {
+  width: 50px;
+  height: 50px;
+  border: 4px solid #f1f5f9;
+  border-top: 4px solid #FF6B35;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: 20px;
+}
+
+.loading-text {
+  font-size: 1.1rem;
+  color: #64748b;
+  font-weight: 500;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* 게임 목록 섹션 */
+.games-section {
+  margin-bottom: 60px;
+}
+
+.games-grid {
   display: grid;
-  grid-template-columns: 1fr;
-  gap: var(--space-6);
+  grid-template-columns: repeat(2, 1fr);
+  gap: 30px;
 }
 
 .game-item {
-  background: var(--bg-primary);
-  padding: var(--space-6);
-  border-radius: var(--radius-xl);
-  box-shadow: var(--shadow-sm);
+  background: white;
+  border-radius: 15px;
+  box-shadow: 0 5px 25px rgba(0,0,0,0.08);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   cursor: pointer;
-  transition: var(--transition-fast);
-  border: 1px solid var(--border-light);
+  border: 1px solid #e2e8f0;
+  overflow: hidden;
 }
 
 .game-item:hover {
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-lg);
-  border-color: var(--border-medium);
+  transform: translateY(-5px);
+  box-shadow: 0 15px 50px rgba(0,0,0,0.15);
+  border-color: #FF6B35;
 }
 
+.game-content {
+  padding: 24px;
+}
+
+/* 게임 헤더 */
 .game-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: var(--space-4);
+  margin-bottom: 20px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #e2e8f0;
 }
 
-.game-header h3 {
-  color: var(--text-primary);
-  margin: 0;
-  font-size: var(--text-lg);
-  font-weight: var(--font-semibold);
-}
-
-.game-stats {
-  display: flex;
-  gap: var(--space-4);
-}
-
-.stat {
-  font-size: var(--text-sm);
-  color: var(--text-secondary);
-  display: flex;
-  align-items: center;
-  gap: var(--space-1);
-}
-
-.game-description {
-  margin-bottom: var(--space-6);
-  color: var(--text-secondary);
-  background: var(--bg-tertiary);
-  padding: var(--space-3);
-  border-radius: var(--radius-lg);
-  border-left: 3px solid var(--primary-color);
-}
-
-.game-options {
-  display: flex;
-  align-items: center;
-  gap: var(--space-8);
-  margin-bottom: var(--space-4);
-}
-
-.option {
-  flex: 1;
-  padding: var(--space-5);
-  background: var(--bg-secondary);
-  border-radius: var(--radius-lg);
-  border: 1px solid var(--border-light);
-  transition: var(--transition-fast);
-}
-
-.option:hover {
-  background: var(--bg-tertiary);
-  box-shadow: var(--shadow-sm);
-}
-
-.option-content h4 {
-  margin-bottom: var(--space-2);
-  color: var(--text-primary);
-  font-size: var(--text-base);
-  font-weight: var(--font-medium);
-}
-
-.option-content p {
-  color: var(--text-secondary);
-  font-size: var(--text-sm);
-}
-
-.vote-stats {
-  margin-top: var(--space-4);
-}
-
-.vote-count {
-  font-weight: var(--font-semibold);
-  color: var(--primary-color);
-  font-size: var(--text-sm);
-}
-
-.vote-bar {
-  width: 100%;
-  height: 4px;
-  background: var(--border-medium);
-  border-radius: var(--radius-sm);
-  margin-top: var(--space-2);
-}
-
-.vote-fill {
-  height: 100%;
-  background: var(--primary-color);
-  border-radius: var(--radius-sm);
-  transition: width var(--transition-medium);
-}
-
-.vs-divider {
-  font-weight: var(--font-bold);
-  color: var(--text-tertiary);
-  font-size: var(--text-lg);
-  background: var(--bg-primary);
-  border-radius: var(--radius-full);
-  padding: var(--space-2);
-  min-width: 60px;
-  text-align: center;
+.game-title {
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: #1a202c;
+  margin-bottom: 12px;
+  line-height: 1.3;
 }
 
 .game-meta {
   display: flex;
-  justify-content: space-between;
-  font-size: var(--text-sm);
-  color: var(--text-secondary);
-  padding-top: var(--space-4);
-  border-top: 1px solid var(--border-light);
+  gap: 16px;
 }
 
-.game-meta + .game-stats {
+.meta-item {
   display: flex;
-  gap: var(--space-4);
-  font-size: var(--text-xs);
-  color: var(--text-tertiary);
-  margin-top: var(--space-2);
-  padding-top: var(--space-2);
-  border-top: 1px solid var(--border-light);
-}
-
-.pagination {
-  display: flex;
-  justify-content: center;
   align-items: center;
-  gap: var(--space-4);
-  margin-top: var(--space-8);
-  padding: var(--space-6);
-  background: var(--bg-primary);
-  border-radius: var(--radius-xl);
-  box-shadow: var(--shadow-sm);
+  gap: 5px;
+  font-size: 0.9rem;
+  color: #64748b;
+  font-weight: 500;
+  background: #f1f5f9;
+  padding: 5px 12px;
+  border-radius: 20px;
 }
 
-.page-info {
-  font-weight: var(--font-medium);
-  color: var(--text-primary);
-  padding: 0 var(--space-4);
+/* 게임 선택지 */
+.game-choices {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  gap: 20px;
+  align-items: center;
+  margin-bottom: 20px;
 }
 
-.no-games {
+.choice {
+  background: #f8fafc;
+  border-radius: 10px;
+  padding: 16px;
+  border: 2px solid transparent;
+  transition: all 0.3s ease;
+}
+
+.choice:hover {
+  border-color: #e2e8f0;
+  background: #f1f5f9;
+}
+
+.choice-a:hover {
+  border-color: #ff6b6b;
+  background: rgba(255, 107, 107, 0.05);
+}
+
+.choice-b:hover {
+  border-color: #4ecdc4;
+  background: rgba(78, 205, 196, 0.05);
+}
+
+.choice-text {
+  font-weight: 600;
+  color: #2d3748;
+  margin-bottom: 12px;
+  line-height: 1.4;
+  font-size: 1rem;
+}
+
+.choice-stats {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.vote-bar {
+  flex: 1;
+  height: 8px;
+  background: #e2e8f0;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.vote-fill-a {
+  height: 100%;
+  background: linear-gradient(90deg, #ff6b6b, #ff8e8e);
+  transition: width 0.5s ease;
+  border-radius: 4px;
+}
+
+.vote-fill-b {
+  height: 100%;
+  background: linear-gradient(90deg, #4ecdc4, #6bcf9f);
+  transition: width 0.5s ease;
+  border-radius: 4px;
+}
+
+.vote-percent {
+  font-weight: 700;
+  color: #4a5568;
+  font-size: 0.9rem;
+  min-width: 35px;
+  text-align: right;
+}
+
+.vs-separator {
+  background: linear-gradient(135deg, #FF6B35, #F7931E);
+  color: white;
+  padding: 10px 15px;
+  border-radius: 25px;
+  font-weight: 800;
+  font-size: 0.9rem;
+  box-shadow: 0 3px 15px rgba(255, 107, 53, 0.4);
+}
+
+/* 게임 푸터 */
+.game-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: 16px;
+  border-top: 1px solid #e2e8f0;
+  font-size: 0.85rem;
+  color: #64748b;
+}
+
+.author-info,
+.date-info,
+.like-info {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+/* 빈 상태 섹션 */
+.empty-section {
+  background: white;
+  border-radius: 15px;
+  border: 2px dashed #cbd5e0;
+  padding: 80px 40px;
+}
+
+.empty-content {
   text-align: center;
-  padding: var(--space-20);
-  color: var(--text-secondary);
-  background: var(--bg-primary);
-  border-radius: var(--radius-xl);
-  box-shadow: var(--shadow-sm);
-  border: 1px solid var(--border-light);
+}
+
+.empty-icon {
+  font-size: 4rem;
+  margin-bottom: 24px;
+}
+
+.empty-title {
+  font-size: 1.5rem;
+  color: #2d3748;
+  margin-bottom: 12px;
+  font-weight: 600;
+}
+
+.empty-description {
+  color: #64748b;
+  margin-bottom: 30px;
+  font-size: 1.1rem;
+}
+
+.btn-create {
+  display: inline-block;
+  padding: 12px 24px;
+  background: linear-gradient(135deg, #FF6B35, #F7931E);
+  color: white;
+  text-decoration: none;
+  border-radius: 25px;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(255, 107, 53, 0.3);
+}
+
+.btn-create:hover {
+  background: linear-gradient(135deg, #E55A2B, #E8860D);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(255, 107, 53, 0.4);
+}
+
+/* 더 보기 섹션 */
+.load-more-section {
+  text-align: center;
+  padding: 40px 0;
+}
+
+.load-more-btn {
+  padding: 14px 32px;
+  background: white;
+  border: 2px solid #e2e8f0;
+  border-radius: 25px;
+  color: #4a5568;
+  font-weight: 600;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+}
+
+.load-more-btn:hover:not(:disabled) {
+  background: #f8fafc;
+  border-color: #FF6B35;
+  color: #FF6B35;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+}
+
+.load-more-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* 반응형 디자인 */
+@media (max-width: 1400px) {
+  .header-container,
+  .container {
+    max-width: 1200px;
+    padding: 0 40px;
+  }
+  
+  .games-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 25px;
+  }
+}
+
+@media (max-width: 1024px) {
+  .header-container,
+  .container {
+    padding: 0 30px;
+  }
+  
+  .page-title {
+    font-size: 2rem;
+  }
+  
+  .games-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .filters-container {
+    flex-direction: column;
+    gap: 20px;
+    align-items: stretch;
+  }
+  
+  .search-section {
+    max-width: none;
+  }
 }
 
 @media (max-width: 768px) {
-  .filters {
-    flex-direction: column;
+  .page-header {
+    padding: 40px 0;
   }
   
-  .search-box {
-    max-width: 100%;
+  .header-container,
+  .container {
+    padding: 0 20px;
   }
   
-  .game-options {
-    flex-direction: column;
-    gap: 1rem;
+  .page-title {
+    font-size: 1.8rem;
   }
   
-  .vs-divider {
+  .page-subtitle {
+    font-size: 1rem;
+  }
+  
+  .game-choices {
+    grid-template-columns: 1fr;
+    gap: 15px;
+  }
+  
+  .vs-separator {
+    order: -1;
     align-self: center;
   }
   
-  .game-header {
+  .game-footer {
     flex-direction: column;
-    align-items: flex-start;
-    gap: 1rem;
-  }
-  
-  .game-stats {
-    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
   }
 }
 </style>

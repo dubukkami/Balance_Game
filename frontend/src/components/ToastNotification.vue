@@ -76,28 +76,27 @@ watch(() => props.isVisible, (newValue) => {
 
 .toast-container {
   position: fixed;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
+  bottom: 20px;
+  right: 20px;
   z-index: 9999;
   min-width: 320px;
-  max-width: 480px;
+  max-width: 400px;
   background: var(--bg-primary);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-xl);
   border: 1px solid var(--border-light);
   overflow: hidden;
-  animation: slideInCenter 0.3s ease-out;
+  animation: slideInRight 0.3s ease-out;
 }
 
-@keyframes slideInCenter {
+@keyframes slideInRight {
   from {
     opacity: 0;
-    transform: translate(-50%, -50%) scale(0.9);
+    transform: translateX(100%);
   }
   to {
     opacity: 1;
-    transform: translate(-50%, -50%) scale(1);
+    transform: translateX(0);
   }
 }
 
@@ -205,18 +204,25 @@ watch(() => props.isVisible, (newValue) => {
 
 @media (max-width: 480px) {
   .toast-container {
+    position: fixed;
+    bottom: 80px;
+    left: 50%;
+    right: auto;
+    top: auto;
+    transform: translateX(-50%);
     min-width: 280px;
     max-width: 90vw;
+    animation: slideInBottom 0.3s ease-out;
   }
   
-  @keyframes slideInCenter {
+  @keyframes slideInBottom {
     from {
       opacity: 0;
-      transform: translate(-50%, -50%) scale(0.8);
+      transform: translateX(-50%) translateY(100%);
     }
     to {
       opacity: 1;
-      transform: translate(-50%, -50%) scale(1);
+      transform: translateX(-50%) translateY(0);
     }
   }
 }

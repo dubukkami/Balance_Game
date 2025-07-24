@@ -72,6 +72,8 @@ public class SecurityConfig {
                 // Public endpoints
                 .requestMatchers("/api/auth/**").permitAll()
                 .requestMatchers("/api/balance-games/**").permitAll()
+                .requestMatchers("/api/web/**").permitAll()
+                .requestMatchers("/api/mobile/**").permitAll()
                 .requestMatchers("/api/comments/count/game/*").permitAll()
                 .requestMatchers("/api/comments/game/*").permitAll()
                 .requestMatchers("/api/comments/game/*/list").permitAll()

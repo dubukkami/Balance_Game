@@ -45,7 +45,7 @@ public class User {
     /** 사용자 권한 (USER, ADMIN) */
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private Role role = Role.USER;
+    private UserRole role = UserRole.USER;
     
     /** OAuth 제공자 (GOOGLE, KAKAO, NAVER) */
     @Enumerated(EnumType.STRING)
@@ -93,10 +93,6 @@ public class User {
     @JsonIgnore
     private List<Comment> comments;
     
-    /** 사용자 권한 열거형 */
-    public enum Role {
-        USER, ADMIN
-    }
     
     /** OAuth 제공자 열거형 */
     public enum Provider {
