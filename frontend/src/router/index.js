@@ -151,12 +151,10 @@ const isMobileDevice = () => {
     result
   })
   
-  // 임시 디버깅 알림 (실제 배포시 제거)
-  if (window.location.pathname === '/') {
-    setTimeout(() => {
-      alert(`모바일 감지: ${result ? '모바일' : '데스크톱'}\nUser-Agent: ${userAgent.substring(0, 50)}...\n화면크기: ${window.innerWidth}x${window.innerHeight}\n터치: ${isTouchDevice}`)
-    }, 1000)
-  }
+  // 임시 디버깅 알림 - 항상 표시
+  setTimeout(() => {
+    alert(`[디버깅] 경로: ${window.location.pathname}\n모바일 감지: ${result ? '모바일' : '데스크톱'}\nUser-Agent: ${userAgent.substring(0, 60)}...\n화면: ${window.innerWidth}x${window.innerHeight}\n터치: ${isTouchDevice}`)
+  }, 2000)
   
   return isMobileUA || isIOSSafari || isAndroidChrome || (isTouchDevice && isSmallScreen)
 }
