@@ -144,7 +144,7 @@ management:
   endpoints:
     web:
       exposure:
-        include: health,info,metrics
+        include: health,info
       base-path: /actuator
   endpoint:
     health:
@@ -153,11 +153,17 @@ management:
         time-to-live: ${HEALTH_CACHE_TTL:5s}
     info:
       enabled: true
+    metrics:
+      enabled: false  # 컨테이너 환경에서 메트릭스 비활성화
   health:
     diskspace:
       threshold: ${HEALTH_DISK_THRESHOLD:100MB}
     db:
       enabled: true
+  metrics:
+    enable:
+      system: false  # 시스템 메트릭스 비활성화
+      process: false  # 프로세스 메트릭스 비활성화
 
 # 로깅 설정 (운영용 - 최소 로깅)
 logging:
