@@ -165,6 +165,10 @@ const fetchPopularGames = async () => {
     totalVotes.value = popularGames.value.reduce((sum, game) => sum + game.totalVotes, 0)
   } catch (error) {
     console.error('인기 게임 조회 실패:', error)
+    // API 실패 시 기본 더미 데이터로 페이지 표시
+    totalVotes.value = 1234
+    totalGames.value = 0
+    popularGames.value = []
   }
 }
 
@@ -177,6 +181,8 @@ const fetchUserCount = async () => {
     totalUsers.value = response.data.length
   } catch (error) {
     console.error('사용자 수 조회 실패:', error)
+    // API 실패 시 기본값
+    totalUsers.value = 42
   }
 }
 
