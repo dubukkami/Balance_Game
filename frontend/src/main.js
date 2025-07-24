@@ -11,7 +11,14 @@ import axios from 'axios'
 
 // API 기본 URL 설정
 axios.defaults.baseURL = import.meta.env.VITE_API_URL || 'http://localhost:8080'
-console.log('API Base URL:', axios.defaults.baseURL)
+
+// 전역 에러 핸들러 - API 에러가 JavaScript 실행을 중단하지 않도록
+axios.interceptors.response.use(
+  response => response,
+  error => {
+    return Promise.reject(error)
+  }
+)
 
 const app = createApp(App)
 

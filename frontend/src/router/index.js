@@ -22,13 +22,28 @@ import Register from '../views/Register.vue'
 import OAuth2Redirect from '../views/OAuth2Redirect.vue'
 import Profile from '../views/Profile.vue'
 
+// 플랫폼별 컴포넌트 선택 함수
+const getHomeComponent = () => {
+  const userAgent = navigator.userAgent.toLowerCase()
+  const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0
+  const isSmallScreen = window.innerWidth <= 768
+  const mobilePattern = /android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini|mobile|phone|tablet/i
+  const isMobileUA = mobilePattern.test(userAgent)
+  const isIOSSafari = /safari/i.test(userAgent) && /mobile/i.test(userAgent)
+  const isAndroidChrome = /android/i.test(userAgent) && /chrome/i.test(userAgent)
+  
+  const isMobile = isMobileUA || isIOSSafari || isAndroidChrome || (isTouchDevice && isSmallScreen)
+  
+  return isMobile ? HomeMobile : Home
+}
+
 const routes = [
-  // 🌐 웹 전용 라우트 (데스크톱/태블릿)
+  // 🌐 반응형 홈 라우트 (플랫폼 자동 감지)
   {
     path: '/',
     name: 'Home',
-    component: Home,
-    meta: { title: '홈', platform: 'web' }
+    component: getHomeComponent,
+    meta: { title: '홈', platform: 'responsive' }
   },
   {
     path: '/games',
@@ -138,23 +153,6 @@ const isMobileDevice = () => {
   
   // Chrome on Android
   const isAndroidChrome = /android/i.test(userAgent) && /chrome/i.test(userAgent)
-  
-  const result = isMobileUA || isIOSSafari || isAndroidChrome || (isTouchDevice && isSmallScreen)
-  
-  console.log('모바일 감지:', {
-    userAgent,
-    isTouchDevice,
-    isSmallScreen,
-    isMobileUA,
-    isIOSSafari,
-    isAndroidChrome,
-    result
-  })
-  
-  // 임시 디버깅 알림 - 항상 표시
-  setTimeout(() => {
-    alert(`[디버깅] 경로: ${window.location.pathname}\n모바일 감지: ${result ? '모바일' : '데스크톱'}\nUser-Agent: ${userAgent.substring(0, 60)}...\n화면: ${window.innerWidth}x${window.innerHeight}\n터치: ${isTouchDevice}`)
-  }, 2000)
   
   return isMobileUA || isIOSSafari || isAndroidChrome || (isTouchDevice && isSmallScreen)
 }
