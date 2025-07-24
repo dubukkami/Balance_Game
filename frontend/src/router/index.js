@@ -139,6 +139,8 @@ const isMobileDevice = () => {
   // Chrome on Android
   const isAndroidChrome = /android/i.test(userAgent) && /chrome/i.test(userAgent)
   
+  const result = isMobileUA || isIOSSafari || isAndroidChrome || (isTouchDevice && isSmallScreen)
+  
   console.log('모바일 감지:', {
     userAgent,
     isTouchDevice,
@@ -146,8 +148,15 @@ const isMobileDevice = () => {
     isMobileUA,
     isIOSSafari,
     isAndroidChrome,
-    result: isMobileUA || isIOSSafari || isAndroidChrome || (isTouchDevice && isSmallScreen)
+    result
   })
+  
+  // 임시 디버깅 알림 (실제 배포시 제거)
+  if (window.location.pathname === '/') {
+    setTimeout(() => {
+      alert(`모바일 감지: ${result ? '모바일' : '데스크톱'}\nUser-Agent: ${userAgent.substring(0, 50)}...\n화면크기: ${window.innerWidth}x${window.innerHeight}\n터치: ${isTouchDevice}`)
+    }, 1000)
+  }
   
   return isMobileUA || isIOSSafari || isAndroidChrome || (isTouchDevice && isSmallScreen)
 }
