@@ -1,58 +1,55 @@
+# ===============================
+# 🍻 술하재밸 - 로컬 개발 환경
+# ===============================
+
+# H2 인메모리 데이터베이스 사용 (개발편의성)
+DATABASE_URL: jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
+DB_DRIVER: org.h2.Driver
+DB_USERNAME: sa
+DB_PASSWORD: 
+
+# H2 콘솔 활성화
+H2_CONSOLE_ENABLED: true
+
+# JPA 설정 (로컬 개발용)
+DDL_AUTO: create-drop  # 매번 스키마 재생성
+SHOW_SQL: true
+FORMAT_SQL: true
+HIBERNATE_DIALECT: org.hibernate.dialect.H2Dialect
+DATABASE_TYPE: h2
+
+# CORS 설정 (로컬 개발 서버들)
+CORS_ORIGINS: http://localhost:3000,http://localhost:5173,http://127.0.0.1:3000,http://127.0.0.1:5173
+
+# OAuth2 리다이렉트 URI (로컬)
+GOOGLE_REDIRECT_URI: http://localhost:8080/login/oauth2/code/google
+KAKAO_REDIRECT_URI: http://localhost:8080/login/oauth2/code/kakao  
+NAVER_REDIRECT_URI: http://localhost:8080/login/oauth2/code/naver
+AUTHORIZED_REDIRECT_URI: http://localhost:3000/oauth2/redirect
+
+# 서버 설정
+SERVER_PORT: 8080
+
+# JWT 설정 (개발용 - 짧은 만료시간)
+JWT_TOKEN_VALIDITY: 86400  # 24시간
+
+# 로깅 설정 (상세 로깅)
+LOG_LEVEL_ROOT: INFO
+LOG_LEVEL_APP: DEBUG
+LOG_LEVEL_WEB: DEBUG  
+LOG_LEVEL_SQL: DEBUG
+LOG_LEVEL_SQL_PARAMS: TRACE
+
+# 개발 전용 설정
 spring:
-  datasource:
-    url: jdbc:h2:mem:testdb
-    driverClassName: org.h2.Driver
-    username: sa
-    password: 
-  
-  h2:
-    console:
+  # 개발 도구 활성화
+  devtools:
+    restart:
       enabled: true
-      path: /h2-console
+    livereload:
+      enabled: true
   
-  jpa:
-    hibernate:
-      ddl-auto: create-drop
-    show-sql: true
-    properties:
-      hibernate:
-        format_sql: true
-    database: h2
-  
+  # 에러 페이지 상세 정보 표시
   web:
-    cors:
-      allowed-origins: "http://localhost:3000"
-      allowed-methods: GET, POST, PUT, DELETE, OPTIONS
-      allowed-headers: "*"
-      allow-credentials: true
-  
-  security:
-    oauth2:
-      client:
-        registration:
-          google:
-            client-id: ${GOOGLE_CLIENT_ID:your-google-client-id}
-            client-secret: ${GOOGLE_CLIENT_SECRET:your-google-client-secret}
-            redirect-uri: "http://localhost:8080/login/oauth2/code/google"
-            scope:
-              - email
-              - profile
-
-server:
-  port: 8080
-
-# JWT 설정
-jwt:
-  secret: ${JWT_SECRET:balancegame-secret-key-for-jwt-token-generation-and-validation-should-be-at-least-256-bits}
-  token-validity-in-seconds: ${JWT_TOKEN_VALIDITY:86400} # 24시간
-
-# 앱 설정
-app:
-  oauth2:
-    authorized-redirect-uri: ${AUTHORIZED_REDIRECT_URI:http://localhost:3000/oauth2/redirect}
-
-logging:
-  level:
-    org.springframework.web: DEBUG
-    org.hibernate.SQL: DEBUG
-    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
+    resources:
+      add-mappings: true
