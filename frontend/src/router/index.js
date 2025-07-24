@@ -123,7 +123,33 @@ const router = createRouter({
 
 // 모바일 기기 감지 함수
 const isMobileDevice = () => {
-  return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)
+  const userAgent = navigator.userAgent.toLowerCase()
+  
+  // 터치 기능과 화면 크기를 함께 고려
+  const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0
+  const isSmallScreen = window.innerWidth <= 768
+  
+  // User-Agent 기반 감지 (더 포괄적인 패턴)
+  const mobilePattern = /android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini|mobile|phone|tablet/i
+  const isMobileUA = mobilePattern.test(userAgent)
+  
+  // Safari on iOS (최신 iOS는 User-Agent에 iPhone이 없을 수 있음)
+  const isIOSSafari = /safari/i.test(userAgent) && /mobile/i.test(userAgent)
+  
+  // Chrome on Android
+  const isAndroidChrome = /android/i.test(userAgent) && /chrome/i.test(userAgent)
+  
+  console.log('모바일 감지:', {
+    userAgent,
+    isTouchDevice,
+    isSmallScreen,
+    isMobileUA,
+    isIOSSafari,
+    isAndroidChrome,
+    result: isMobileUA || isIOSSafari || isAndroidChrome || (isTouchDevice && isSmallScreen)
+  })
+  
+  return isMobileUA || isIOSSafari || isAndroidChrome || (isTouchDevice && isSmallScreen)
 }
 
 // 라우트 변경 시 모바일 리다이렉트 및 페이지 제목 업데이트
