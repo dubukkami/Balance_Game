@@ -49,7 +49,8 @@ public class WebBalanceGameController {
     public ResponseEntity<Page<BalanceGameDto>> getAllBalanceGames(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
-            @RequestParam(defaultValue = "latest") String sort) {
+            @RequestParam(defaultValue = "latest") String sort,
+            @RequestParam(required = false) String period) {
         
         try {
             Pageable pageable = createPageable(page, size, sort);
@@ -62,6 +63,13 @@ public class WebBalanceGameController {
                     break;
                 case "votes":
                     results = balanceGameRepository.findAllWithStatsOrderByVoteCount(pageable);
+                    break;
+                case "likes":
+                    if (period != null) {
+                        results = balanceGameRepository.findAllWithStatsOrderByLikesByPeriod(pageable, period);
+                    } else {
+                        results = balanceGameRepository.findAllWithStatsOrderByLikes(pageable);
+                    }
                     break;
                 default: // "latest"
                     results = balanceGameRepository.findAllWithStats(pageable);
