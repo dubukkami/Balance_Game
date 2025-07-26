@@ -10,6 +10,9 @@ import org.springframework.security.oauth2.client.registration.InMemoryClientReg
 import org.springframework.security.oauth2.core.AuthorizationGrantType;
 import org.springframework.security.oauth2.core.ClientAuthenticationMethod;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * OAuth2 클라이언트 설정
  * 환경변수 기반으로 동적 redirect URI 설정
@@ -40,11 +43,24 @@ public class OAuth2Config {
 
     @Bean
     public ClientRegistrationRepository clientRegistrationRepository() {
-        return new InMemoryClientRegistrationRepository(
-            googleClientRegistration(),
-            kakaoClientRegistration(),
-            naverClientRegistration()
-        );
+        List<ClientRegistration> registrations = new ArrayList<>();
+        
+        if (!googleClientId.isEmpty()) {
+            registrations.add(googleClientRegistration());
+        }
+        if (!kakaoClientId.isEmpty()) {
+            registrations.add(kakaoClientRegistration());
+        }
+        if (!naverClientId.isEmpty()) {
+            registrations.add(naverClientRegistration());
+        }
+        
+        if (registrations.isEmpty()) {
+            // 모든 OAuth2 클라이언트가 설정되지 않은 경우 더미 등록 생성
+            registrations.add(dummyClientRegistration());
+        }
+        
+        return new InMemoryClientRegistrationRepository(registrations);
     }
 
     private ClientRegistration googleClientRegistration() {
@@ -92,6 +108,22 @@ public class OAuth2Config {
             .userInfoUri("https://openapi.naver.com/v1/nid/me")
             .userNameAttributeName("response")
             .clientName("Naver")
+            .build();
+    }
+    
+    private ClientRegistration dummyClientRegistration() {
+        return ClientRegistration.withRegistrationId("dummy")
+            .clientId("dummy-client-id")
+            .clientSecret("dummy-client-secret")
+            .clientAuthenticationMethod(ClientAuthenticationMethod.CLIENT_SECRET_BASIC)
+            .authorizationGrantType(AuthorizationGrantType.AUTHORIZATION_CODE)
+            .redirectUri("http://localhost:8080/login/oauth2/code/dummy")
+            .scope("read")
+            .authorizationUri("https://dummy.com/oauth/authorize")
+            .tokenUri("https://dummy.com/oauth/token")
+            .userInfoUri("https://dummy.com/userinfo")
+            .userNameAttributeName("id")
+            .clientName("Dummy")
             .build();
     }
 }
