@@ -40,6 +40,18 @@
             <router-link to="/games" class="view-all-link">전체 보기 →</router-link>
           </div>
           
+          <!-- 베스트 탭 메뉴 -->
+          <div class="best-tabs">
+            <button 
+              v-for="tab in bestTabs" 
+              :key="tab.key"
+              @click="activeTab = tab.key; fetchBestGames()"
+              :class="['tab-button', { active: activeTab === tab.key }]"
+            >
+              {{ tab.icon }} {{ tab.label }}
+            </button>
+          </div>
+          
           <div v-if="popularGames.length > 0" class="games-container">
             <div 
               v-for="game in popularGames" 
@@ -142,6 +154,15 @@ const popularGames = ref([])
 const totalGames = ref(0)
 const totalVotes = ref(0)
 const totalUsers = ref(0)
+const activeTab = ref('daily')
+
+// 베스트 탭 메뉴
+const bestTabs = ref([
+  { key: 'daily', label: '일간 베스트', icon: '🔥' },
+  { key: 'weekly', label: '주간 베스트', icon: '📈' },
+  { key: 'monthly', label: '월간 베스트', icon: '👑' },
+  { key: 'all', label: '전체 베스트', icon: '💎' }
+])
 
 
 /**
@@ -153,23 +174,52 @@ const goToGame = (gameId) => {
 }
 
 /**
- * 인기 게임 목록 조회 (웹 API)
+ * 베스트 게임 목록 조회 (탭별)
  */
-const fetchPopularGames = async () => {
+const fetchBestGames = async () => {
   try {
-    const response = await axios.get('/api/web/balance-games?sort=popular&size=6')
+    let sortParam = 'popular'
+    let dateParam = ''
+    
+    switch (activeTab.value) {
+      case 'daily':
+        sortParam = 'likes'
+        dateParam = '&period=daily'
+        break
+      case 'weekly':
+        sortParam = 'likes'
+        dateParam = '&period=weekly'
+        break
+      case 'monthly':
+        sortParam = 'likes'
+        dateParam = '&period=monthly'
+        break
+      case 'all':
+        sortParam = 'likes'
+        dateParam = '&period=all'
+        break
+    }
+    
+    const response = await axios.get(`/api/web/balance-games?sort=${sortParam}&size=6${dateParam}`)
     popularGames.value = response.data.content
     totalGames.value = response.data.totalElements
     
     // 총 투표 수 계산
     totalVotes.value = popularGames.value.reduce((sum, game) => sum + game.totalVotes, 0)
   } catch (error) {
-    console.error('인기 게임 조회 실패:', error)
+    console.error('베스트 게임 조회 실패:', error)
     // API 실패 시 기본 더미 데이터로 페이지 표시
     totalVotes.value = 1234
     totalGames.value = 0
     popularGames.value = []
   }
+}
+
+/**
+ * 인기 게임 목록 조회 (웹 API) - 하위 호환성
+ */
+const fetchPopularGames = async () => {
+  await fetchBestGames()
 }
 
 /**
@@ -193,8 +243,28 @@ const getVotePercentage = (votes, total) => {
   return total > 0 ? (votes / total) * 100 : 0
 }
 
+// 모바일 감지 및 리다이렉트
+const checkMobileAndRedirect = () => {
+  const userAgent = navigator.userAgent.toLowerCase()
+  const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0
+  const isSmallScreen = window.innerWidth <= 768
+  const mobilePattern = /android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini|mobile|phone|tablet/i
+  const isMobileUA = mobilePattern.test(userAgent)
+  const isIOSSafari = /safari/i.test(userAgent) && /mobile/i.test(userAgent)
+  const isAndroidChrome = /android/i.test(userAgent) && /chrome/i.test(userAgent)
+  
+  const isMobile = isMobileUA || isIOSSafari || isAndroidChrome || (isTouchDevice && isSmallScreen)
+  
+  if (isMobile && router.currentRoute.value.path === '/') {
+    router.replace('/mobile')
+  }
+}
+
 // 컴포넌트 마운트 시 데이터 로드
 onMounted(() => {
+  // 모바일 체크
+  checkMobileAndRedirect()
+  
   // API 호출을 try-catch로 완전히 감싸서 에러 방지
   try {
     fetchPopularGames()
@@ -445,6 +515,49 @@ onMounted(() => {
   color: white;
   transform: translateX(5px);
   box-shadow: 0 4px 15px rgba(255, 107, 53, 0.3);
+}
+
+/* 베스트 탭 스타일 */
+.best-tabs {
+  display: flex;
+  gap: 8px;
+  margin: 24px 0;
+  padding: 8px;
+  background: #f8fafc;
+  border-radius: 12px;
+  overflow-x: auto;
+}
+
+.tab-button {
+  flex: 1;
+  min-width: 120px;
+  padding: 12px 16px;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: #64748b;
+  font-weight: 500;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.tab-button:hover {
+  background: #e2e8f0;
+  color: #475569;
+}
+
+.tab-button.active {
+  background: linear-gradient(135deg, #FF6B35 0%, #F7931E 50%, #FFD23F 100%);
+  color: white;
+  box-shadow: 0 2px 8px rgba(255, 107, 53, 0.3);
+}
+
+.tab-button.active:hover {
+  background: linear-gradient(135deg, #FF6B35 0%, #F7931E 50%, #FFD23F 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(255, 107, 53, 0.4);
 }
 
 /* 게임 컨테이너 */

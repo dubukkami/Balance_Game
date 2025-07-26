@@ -22,28 +22,13 @@ import Register from '../views/Register.vue'
 import OAuth2Redirect from '../views/OAuth2Redirect.vue'
 import Profile from '../views/Profile.vue'
 
-// 플랫폼별 컴포넌트 선택 함수
-const getHomeComponent = () => {
-  const userAgent = navigator.userAgent.toLowerCase()
-  const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0
-  const isSmallScreen = window.innerWidth <= 768
-  const mobilePattern = /android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini|mobile|phone|tablet/i
-  const isMobileUA = mobilePattern.test(userAgent)
-  const isIOSSafari = /safari/i.test(userAgent) && /mobile/i.test(userAgent)
-  const isAndroidChrome = /android/i.test(userAgent) && /chrome/i.test(userAgent)
-  
-  const isMobile = isMobileUA || isIOSSafari || isAndroidChrome || (isTouchDevice && isSmallScreen)
-  
-  return isMobile ? HomeMobile : Home
-}
-
 const routes = [
-  // 🌐 반응형 홈 라우트 (플랫폼 자동 감지)
+  // 🌐 웹 전용 라우트 (데스크톱/태블릿)
   {
     path: '/',
     name: 'Home',
-    component: getHomeComponent,
-    meta: { title: '홈', platform: 'responsive' }
+    component: Home,
+    meta: { title: '홈', platform: 'web' }
   },
   {
     path: '/games',

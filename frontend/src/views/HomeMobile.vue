@@ -49,6 +49,19 @@
         <router-link to="/mobile/games" class="see-all-btn">전체보기</router-link>
       </div>
       
+      <!-- 베스트 탭 메뉴 (모바일) -->
+      <div class="best-tabs-mobile">
+        <button 
+          v-for="tab in bestTabs" 
+          :key="tab.key"
+          @click="activeTab = tab.key; fetchBestGames()"
+          :class="['tab-button-mobile', { active: activeTab === tab.key }]"
+        >
+          {{ tab.icon }}
+          <span>{{ tab.label }}</span>
+        </button>
+      </div>
+      
       <div class="games-list-mobile" v-if="popularGames.length > 0">
         <div 
           v-for="game in popularGames.slice(0, 4)" 
@@ -121,6 +134,15 @@ const popularGames = ref([])
 const totalGames = ref(0)
 const totalVotes = ref(0)
 const totalUsers = ref(0)
+const activeTab = ref('daily')
+
+// 베스트 탭 메뉴
+const bestTabs = ref([
+  { key: 'daily', label: '일간', icon: '🔥' },
+  { key: 'weekly', label: '주간', icon: '📈' },
+  { key: 'monthly', label: '월간', icon: '👑' },
+  { key: 'all', label: '전체', icon: '💎' }
+])
 
 /**
  * 게임 상세 페이지로 이동
@@ -131,19 +153,52 @@ const goToGame = (gameId) => {
 }
 
 /**
- * 인기 게임 목록 조회 (모바일 API)
+ * 베스트 게임 목록 조회 (탭별 - 모바일)
  */
-const fetchPopularGames = async () => {
+const fetchBestGames = async () => {
   try {
-    const response = await axios.get('/api/mobile/balance-games?sort=popular&size=6')
+    let sortParam = 'popular'
+    let dateParam = ''
+    
+    switch (activeTab.value) {
+      case 'daily':
+        sortParam = 'likes'
+        dateParam = '&period=daily'
+        break
+      case 'weekly':
+        sortParam = 'likes'
+        dateParam = '&period=weekly'
+        break
+      case 'monthly':
+        sortParam = 'likes'
+        dateParam = '&period=monthly'
+        break
+      case 'all':
+        sortParam = 'likes'
+        dateParam = '&period=all'
+        break
+    }
+    
+    const response = await axios.get(`/api/mobile/balance-games?sort=${sortParam}&size=6${dateParam}`)
     popularGames.value = response.data.content
     totalGames.value = response.data.totalElements
     
     // 총 투표 수 계산
     totalVotes.value = popularGames.value.reduce((sum, game) => sum + game.totalVotes, 0)
   } catch (error) {
-    console.error('인기 게임 조회 실패:', error)
+    console.error('베스트 게임 조회 실패:', error)
+    // API 실패 시 기본값
+    totalVotes.value = 1234
+    totalGames.value = 0
+    popularGames.value = []
   }
+}
+
+/**
+ * 인기 게임 목록 조회 (모바일 API) - 하위 호환성
+ */
+const fetchPopularGames = async () => {
+  await fetchBestGames()
 }
 
 /**
@@ -329,6 +384,63 @@ onMounted(() => {
 
 .see-all-btn:hover {
   background: #f8f9fa;
+}
+
+/* 베스트 탭 스타일 (모바일) */
+.best-tabs-mobile {
+  display: flex;
+  gap: 6px;
+  margin: 12px 0 16px 0;
+  padding: 6px;
+  background: #f8fafc;
+  border-radius: 10px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.best-tabs-mobile::-webkit-scrollbar {
+  display: none;
+}
+
+.tab-button-mobile {
+  flex: 1;
+  min-width: 70px;
+  padding: 8px 12px;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: #64748b;
+  font-weight: 500;
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+
+.tab-button-mobile span {
+  font-size: 10px;
+}
+
+.tab-button-mobile:hover {
+  background: #e2e8f0;
+  color: #475569;
+}
+
+.tab-button-mobile.active {
+  background: linear-gradient(135deg, #FF6B35 0%, #F7931E 50%, #FFD23F 100%);
+  color: white;
+  box-shadow: 0 2px 6px rgba(255, 107, 53, 0.3);
+}
+
+.tab-button-mobile.active:hover {
+  background: linear-gradient(135deg, #FF6B35 0%, #F7931E 50%, #FFD23F 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 3px 8px rgba(255, 107, 53, 0.4);
 }
 
 /* 게임 리스트 */
