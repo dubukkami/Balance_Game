@@ -23,7 +23,9 @@ spring:
       idle-timeout: ${DB_IDLE_TIMEOUT:300000}      # 5분
       max-lifetime: ${DB_MAX_LIFETIME:1200000}     # 20분
       connection-timeout: ${DB_CONNECTION_TIMEOUT:20000}  # 20초
-      leak-detection-threshold: ${DB_LEAK_DETECTION:60000}  # 1분
+      leak-detection-threshold: 0  # 시계 동기화 문제로 비활성화
+      validation-timeout: ${DB_VALIDATION_TIMEOUT:5000}   # 5초
+      initialization-fail-timeout: ${DB_INIT_FAIL_TIMEOUT:30000}  # 30초
 
   # H2 콘솔 비활성화 (보안)
   h2:

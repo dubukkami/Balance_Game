@@ -19,7 +19,7 @@ spring:
       pool-name: HikariCP-Pool
       max-lifetime: ${HIKARI_MAX_LIFETIME:1800000}
       connection-timeout: ${HIKARI_CONNECTION_TIMEOUT:30000}
-      leak-detection-threshold: ${HIKARI_LEAK_DETECTION:60000}
+      leak-detection-threshold: 0  # 시계 동기화 문제로 비활성화
 
   # H2 콘솔 설정
   h2:
