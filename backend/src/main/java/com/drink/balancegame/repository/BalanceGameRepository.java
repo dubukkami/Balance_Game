@@ -198,7 +198,7 @@ public interface BalanceGameRepository extends JpaRepository<BalanceGame, Long> 
     /**
      * 게임 목록과 모든 통계를 한 번에 조회 (N+1 쿼리 해결) - 기간별 좋아요수순
      * @param pageable 페이징 정보
-     * @param period 기간 (daily, weekly, monthly, all)
+     * @param startDate 시작 날짜
      * @return 통계 정보가 포함된 게임 목록
      */
     @Query("""
@@ -211,7 +211,7 @@ public interface BalanceGameRepository extends JpaRepository<BalanceGame, Long> 
         LEFT JOIN (
             SELECT l.balanceGame.id as gameId, COUNT(l) as likeCount 
             FROM Like l 
-            WHERE :startDate IS NULL OR l.createdAt >= :startDate
+            WHERE l.createdAt >= :startDate
             GROUP BY l.balanceGame.id
         ) likes ON bg.id = likes.gameId
         LEFT JOIN (
@@ -237,12 +237,15 @@ public interface BalanceGameRepository extends JpaRepository<BalanceGame, Long> 
      * @return 통계 정보가 포함된 게임 목록
      */
     default Page<Object[]> findAllWithStatsOrderByLikesByPeriod(Pageable pageable, String period) {
-        LocalDateTime startDate = switch (period) {
-            case "daily" -> LocalDateTime.now().minusDays(1);
-            case "weekly" -> LocalDateTime.now().minusDays(7);
-            case "monthly" -> LocalDateTime.now().minusDays(30);
-            default -> null; // "all"의 경우
-        };
-        return findAllWithStatsOrderByLikesWithPeriod(pageable, startDate);
+        switch (period) {
+            case "daily":
+                return findAllWithStatsOrderByLikesWithPeriod(pageable, LocalDateTime.now().minusDays(1));
+            case "weekly":
+                return findAllWithStatsOrderByLikesWithPeriod(pageable, LocalDateTime.now().minusDays(7));
+            case "monthly":
+                return findAllWithStatsOrderByLikesWithPeriod(pageable, LocalDateTime.now().minusDays(30));
+            default: // "all"의 경우
+                return findAllWithStatsOrderByLikes(pageable);
+        }
     }
 }
