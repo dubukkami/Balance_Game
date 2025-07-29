@@ -118,7 +118,8 @@ const socialLogin = (provider) => {
   error.value = ''
   
   // OAuth 로그인 URL로 이동
-  window.location.href = `http://localhost:8080/oauth2/authorization/${provider}`
+  const apiBaseUrl = import.meta.env.VITE_API_URL || 'http://localhost:8080'
+  window.location.href = `${apiBaseUrl}/oauth2/authorization/${provider}`
 }
 
 /**
