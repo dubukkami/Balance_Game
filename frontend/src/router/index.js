@@ -15,10 +15,10 @@ import HomeMobile from '../views/HomeMobile.vue'
 import GameListMobile from '../views/GameListMobile.vue'
 import CreateGameMobile from '../views/CreateGameMobile.vue'
 import LoginMobile from '../views/LoginMobile.vue'
+import GameDetailMobile from '../views/GameDetailMobile.vue'
 
 // 공통 컴포넌트
 import GameDetail from '../views/GameDetail.vue'
-import Register from '../views/Register.vue'
 import OAuth2Redirect from '../views/OAuth2Redirect.vue'
 import Profile from '../views/Profile.vue'
 
@@ -86,15 +86,9 @@ const routes = [
   {
     path: '/mobile/game/:id',
     name: 'GameDetailMobile',
-    component: GameDetail,
+    component: GameDetailMobile,
     meta: { title: '게임 상세', platform: 'mobile' },
     props: true
-  },
-  {
-    path: '/register',
-    name: 'Register',
-    component: Register,
-    meta: { title: '회원가입', platform: 'common' }
   },
   {
     path: '/oauth2/redirect',

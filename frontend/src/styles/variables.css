@@ -5,6 +5,10 @@
   --primary-hover: #1E4A99;
   --secondary-color: #6B73FF;
   --accent-color: #FF6B6B;
+  --accent-yellow: #FFD93D;
+  --vote-option-a-light: #FF8E8E;
+  --vote-option-b-primary: #4ECDC4;
+  --vote-option-b-light: #6BCF9F;
   
   /* Grays */
   --gray-50: #FAFAFA;
