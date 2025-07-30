@@ -1,11 +1,11 @@
 <!--
-  OAuth2 로그인 리다이렉트 처리 컴포넌트 (데스크탑)
+  OAuth2 로그인 리다이렉트 처리 컴포넌트 (모바일)
 -->
 <template>
-  <div class="oauth-redirect">
-    <div class="container">
-      <div class="loading-card">
-        <div class="loading-spinner">🍻</div>
+  <div class="mobile-oauth-redirect">
+    <div class="mobile-container">
+      <div class="mobile-loading-card">
+        <div class="mobile-loading-spinner">🍻</div>
         <h2>로그인 처리 중...</h2>
         <p>잠시만 기다려주세요!</p>
       </div>
@@ -15,7 +15,7 @@
 
 <script setup>
 /**
- * OAuth2 리다이렉트 처리 로직 (데스크탑)
+ * OAuth2 리다이렉트 처리 로직 (모바일)
  */
 import { onMounted } from 'vue'
 import { useRouter } from 'vue-router'
@@ -31,32 +31,29 @@ onMounted(() => {
 /**
  * OAuth2 리다이렉트 처리
  */
-const handleOAuth2Redirect = () => {
-  const urlParams = new URLSearchParams(window.location.search)
-  const token = urlParams.get('token')
-  const error = urlParams.get('error')
-  
-  if (error) {
-    console.error('OAuth2 로그인 실패:', error)
-    router.push('/login?error=oauth_failed')
-    return
-  }
-  
-  if (token) {
-    // 토큰으로 사용자 정보 가져오기
-    fetchUserInfo(token)
-  } else {
-    console.error('토큰이 없습니다.')
-    router.push('/login?error=no_token')
-  }
-}
-
-/**
- * 사용자 정보 가져오기
- */
-const fetchUserInfo = async (token) => {
+const handleOAuth2Redirect = async () => {
   try {
-    const response = await fetch('/api/auth/me', {
+    // URL에서 토큰 추출
+    const urlParams = new URLSearchParams(window.location.search)
+    const token = urlParams.get('token')
+    const error = urlParams.get('error')
+    
+    // 에러가 있는 경우
+    if (error) {
+      console.error('OAuth2 로그인 에러:', error)
+      router.push('/login?error=' + error)
+      return
+    }
+    
+    // 토큰이 없는 경우
+    if (!token) {
+      console.error('토큰이 없습니다.')
+      router.push('/login?error=no_token')
+      return
+    }
+    
+    // 토큰을 사용하여 사용자 정보 조회
+    const response = await fetch('/api/users/me', {
       headers: {
         'Authorization': `Bearer ${token}`
       }
@@ -81,42 +78,44 @@ const fetchUserInfo = async (token) => {
 </script>
 
 <style scoped>
-.oauth-redirect {
-  min-height: 70vh;
+.mobile-oauth-redirect {
+  min-height: 100vh;
   display: flex;
   align-items: center;
   justify-content: center;
   background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+  padding: 1rem;
 }
 
-.container {
-  max-width: 400px;
-  margin: 0 auto;
-  padding: 0 1rem;
+.mobile-container {
+  width: 100%;
+  max-width: 320px;
 }
 
-.loading-card {
+.mobile-loading-card {
   background: white;
-  padding: 3rem 2rem;
-  border-radius: 20px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+  padding: 2rem 1.5rem;
+  border-radius: 16px;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
   text-align: center;
 }
 
-.loading-spinner {
-  font-size: 4rem;
+.mobile-loading-spinner {
+  font-size: 3rem;
   margin-bottom: 1rem;
   animation: spin 2s linear infinite;
 }
 
-.loading-card h2 {
-  margin: 0 0 1rem 0;
+.mobile-loading-card h2 {
+  margin: 0 0 0.8rem 0;
   color: #2c3e50;
+  font-size: 1.3rem;
 }
 
-.loading-card p {
+.mobile-loading-card p {
   margin: 0;
   color: #7f8c8d;
+  font-size: 0.9rem;
 }
 
 @keyframes spin {
