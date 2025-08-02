@@ -203,30 +203,13 @@ public interface BalanceGameRepository extends JpaRepository<BalanceGame, Long> 
      */
     @Query("""
         SELECT bg, 
-               COALESCE(likes.likeCount, 0) as likeCount,
-               COALESCE(votes.optionACount, 0) as optionACount, 
-               COALESCE(votes.optionBCount, 0) as optionBCount,
-               COALESCE(comments.commentCount, 0) as commentCount
+               COALESCE((SELECT COUNT(l) FROM Like l WHERE l.balanceGame.id = bg.id), 0) as totalLikeCount,
+               COALESCE((SELECT SUM(CASE WHEN v.selectedOption = 'A' THEN 1 ELSE 0 END) FROM Vote v WHERE v.balanceGame.id = bg.id), 0) as optionACount,
+               COALESCE((SELECT SUM(CASE WHEN v.selectedOption = 'B' THEN 1 ELSE 0 END) FROM Vote v WHERE v.balanceGame.id = bg.id), 0) as optionBCount,
+               COALESCE((SELECT COUNT(c) FROM Comment c WHERE c.balanceGame.id = bg.id), 0) as commentCount,
+               COALESCE((SELECT COUNT(l) FROM Like l WHERE l.balanceGame.id = bg.id AND l.createdAt >= :startDate), 0) as periodLikeCount
         FROM BalanceGame bg
-        LEFT JOIN (
-            SELECT l.balanceGame.id as gameId, COUNT(l) as likeCount 
-            FROM Like l 
-            WHERE l.createdAt >= :startDate
-            GROUP BY l.balanceGame.id
-        ) likes ON bg.id = likes.gameId
-        LEFT JOIN (
-            SELECT v.balanceGame.id as gameId,
-                   SUM(CASE WHEN v.selectedOption = 'A' THEN 1 ELSE 0 END) as optionACount,
-                   SUM(CASE WHEN v.selectedOption = 'B' THEN 1 ELSE 0 END) as optionBCount
-            FROM Vote v 
-            GROUP BY v.balanceGame.id
-        ) votes ON bg.id = votes.gameId
-        LEFT JOIN (
-            SELECT c.balanceGame.id as gameId, COUNT(c) as commentCount 
-            FROM Comment c 
-            GROUP BY c.balanceGame.id
-        ) comments ON bg.id = comments.gameId
-        ORDER BY COALESCE(likes.likeCount, 0) DESC
+        ORDER BY COALESCE((SELECT COUNT(l) FROM Like l WHERE l.balanceGame.id = bg.id AND l.createdAt >= :startDate), 0) DESC, bg.createdAt DESC
         """)
     Page<Object[]> findAllWithStatsOrderByLikesWithPeriod(Pageable pageable, @Param("startDate") LocalDateTime startDate);
     
@@ -239,11 +222,11 @@ public interface BalanceGameRepository extends JpaRepository<BalanceGame, Long> 
     default Page<Object[]> findAllWithStatsOrderByLikesByPeriod(Pageable pageable, String period) {
         switch (period) {
             case "daily":
-                return findAllWithStatsOrderByLikesWithPeriod(pageable, LocalDateTime.now().minusDays(1));
+                return findAllWithStatsOrderByLikesWithPeriod(pageable, LocalDateTime.now().minusHours(24));
             case "weekly":
-                return findAllWithStatsOrderByLikesWithPeriod(pageable, LocalDateTime.now().minusDays(7));
+                return findAllWithStatsOrderByLikesWithPeriod(pageable, LocalDateTime.now().minusHours(168)); // 7*24
             case "monthly":
-                return findAllWithStatsOrderByLikesWithPeriod(pageable, LocalDateTime.now().minusDays(30));
+                return findAllWithStatsOrderByLikesWithPeriod(pageable, LocalDateTime.now().minusHours(720)); // 30*24
             default: // "all"의 경우
                 return findAllWithStatsOrderByLikes(pageable);
         }

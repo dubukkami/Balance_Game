@@ -88,6 +88,55 @@ public class BalanceGameService {
     }
     
     /**
+     * 기간별 베스트 게임 조회 (좋아요 기준)
+     * @param period 기간 (daily, weekly, monthly, all)
+     * @param pageable 페이징 정보
+     * @param userId 현재 사용자 ID (선택사항)
+     * @return 기간별 베스트 게임 목록
+     */
+    public Page<BalanceGameDto> getBestGamesByPeriod(String period, Pageable pageable, Long userId) {
+        log.debug("기간별 베스트 게임 조회 - 기간: {}, 페이지: {}, 사용자 ID: {}", period, pageable, userId);
+        
+        Page<Object[]> results = balanceGameRepository.findAllWithStatsOrderByLikesByPeriod(pageable, period);
+        return results.map(this::convertToBalanceGameDtoFromStats);
+    }
+    
+    /**
+     * 통계 정보가 포함된 Object[] 배열을 BalanceGameDto로 변환
+     */
+    private BalanceGameDto convertToBalanceGameDtoFromStats(Object[] row) {
+        BalanceGame game = (BalanceGame) row[0];
+        Long likeCount = ((Number) row[1]).longValue();
+        Long optionACount = ((Number) row[2]).longValue(); 
+        Long optionBCount = ((Number) row[3]).longValue();
+        Long commentCount = ((Number) row[4]).longValue();
+        Long totalVotes = optionACount + optionBCount;
+        
+        return BalanceGameDto.builder()
+                .id(game.getId())
+                .title(game.getTitle())
+                .description(game.getDescription())
+                .optionA(game.getOptionA())
+                .optionADescription(game.getOptionADescription())
+                .optionB(game.getOptionB())
+                .optionBDescription(game.getOptionBDescription())
+                .authorId(game.getAuthor().getId())
+                .authorUsername(game.getAuthor().getUsername())
+                .authorNickname(game.getAuthor().getNickname())
+                .viewCount(game.getViewCount())
+                .createdAt(game.getCreatedAt())
+                .updatedAt(game.getUpdatedAt())
+                .likeCount(likeCount)
+                .isLiked(false) // 로그인하지 않은 상태로 처리
+                .optionAVotes(optionACount)
+                .optionBVotes(optionBCount)
+                .totalVotes(totalVotes)
+                .userVote(null) // 로그인하지 않은 상태로 처리
+                .commentCount(commentCount)
+                .build();
+    }
+    
+    /**
      * 제목으로 게임 검색
      * @param title 검색할 제목
      * @param pageable 페이징 정보

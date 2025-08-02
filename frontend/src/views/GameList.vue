@@ -116,11 +116,41 @@
           </div>
         </section>
 
-        <!-- 더 보기 섹션 -->
-        <section v-if="hasMore && games.length > 0" class="load-more-section">
-          <button @click="loadMoreGames" class="load-more-btn" :disabled="loading">
-            {{ loading ? '로딩 중...' : '더 보기' }}
-          </button>
+        <!-- 페이징 섹션 -->
+        <section v-if="totalPages > 1 && games.length > 0" class="pagination-section">
+          <div class="pagination-container">
+            <button 
+              @click="goToPage(currentPage - 1)" 
+              :disabled="currentPage === 0 || loading"
+              class="pagination-btn pagination-prev"
+            >
+              ← 이전
+            </button>
+            
+            <div class="pagination-numbers">
+              <button
+                v-for="page in visiblePages"
+                :key="page"
+                @click="goToPage(page - 1)"
+                :disabled="loading"
+                :class="['pagination-btn', 'pagination-number', { 'active': page - 1 === currentPage }]"
+              >
+                {{ page }}
+              </button>
+            </div>
+            
+            <button 
+              @click="goToPage(currentPage + 1)" 
+              :disabled="currentPage >= totalPages - 1 || loading"
+              class="pagination-btn pagination-next"
+            >
+              다음 →
+            </button>
+          </div>
+          
+          <div class="pagination-info">
+            {{ currentPage + 1 }} / {{ totalPages }} 페이지 (총 {{ totalElements }}개)
+          </div>
         </section>
       </div>
     </main>
@@ -140,9 +170,10 @@ const authStore = useAuthStore()
 const games = ref([])
 const loading = ref(false)
 const currentPage = ref(0)
+const totalPages = ref(0)
+const totalElements = ref(0)
 const sortBy = ref('latest')
 const searchTerm = ref('')
-const hasMore = ref(true)
 
 
 // 정렬 옵션
@@ -152,31 +183,39 @@ const sortOptions = [
   { value: 'votes', label: '투표순' }
 ]
 
+// 페이징 관련 computed
+const visiblePages = computed(() => {
+  const pages = []
+  const start = Math.max(1, currentPage.value - 2)
+  const end = Math.min(totalPages.value, currentPage.value + 3)
+  
+  for (let i = start; i <= end; i++) {
+    pages.push(i)
+  }
+  return pages
+})
+
 /**
  * 게임 목록 조회 (웹 API)
  */
-const fetchGames = async (reset = true) => {
+const fetchGames = async (page = 0) => {
   if (loading.value) return
   
   loading.value = true
   try {
     const params = {
-      page: reset ? 0 : currentPage.value,
+      page: page,
       size: 10,
       sort: sortBy.value
     }
     
     const response = await axios.get('/api/web/balance-games', { params })
     
-    if (reset) {
-      games.value = response.data.content
-      currentPage.value = 0
-    } else {
-      games.value.push(...response.data.content)
-    }
-    
-    hasMore.value = !response.data.last
+    games.value = response.data.content
     currentPage.value = response.data.number
+    totalPages.value = response.data.totalPages
+    totalElements.value = response.data.totalElements
+    
   } catch (error) {
     console.error('게임 목록 조회 실패:', error)
   } finally {
@@ -189,16 +228,17 @@ const fetchGames = async (reset = true) => {
  */
 const changeSortBy = (newSort) => {
   sortBy.value = newSort
-  fetchGames(true)
+  fetchGames(0)
 }
 
 /**
- * 더 많은 게임 로드
+ * 페이지 이동
  */
-const loadMoreGames = () => {
-  if (hasMore.value && !loading.value) {
-    currentPage.value += 1
-    fetchGames(false)
+const goToPage = (page) => {
+  if (page >= 0 && page < totalPages.value && !loading.value) {
+    fetchGames(page)
+    // 맨 위로 스크롤
+    window.scrollTo({ top: 0, behavior: 'smooth' })
   }
 }
 
@@ -207,7 +247,7 @@ const loadMoreGames = () => {
  */
 const searchGames = async () => {
   if (!searchTerm.value.trim()) {
-    fetchGames(true)
+    fetchGames(0)
     return
   }
   
@@ -221,8 +261,9 @@ const searchGames = async () => {
     
     const response = await axios.get('/api/web/balance-games/search', { params })
     games.value = response.data.content
-    hasMore.value = !response.data.last
-    currentPage.value = 0
+    currentPage.value = response.data.number
+    totalPages.value = response.data.totalPages
+    totalElements.value = response.data.totalElements
   } catch (error) {
     console.error('게임 검색 실패:', error)
   } finally {
@@ -261,7 +302,7 @@ const formatDate = (dateString) => {
 
 // 컴포넌트 마운트 시 데이터 로드
 onMounted(() => {
-  fetchGames(true)
+  fetchGames(0)
 })
 </script>
 
@@ -445,6 +486,31 @@ onMounted(() => {
 }
 
 .sort-select:focus {
+  outline: none;
+  border-color: #FF6B35;
+  box-shadow: 0 0 0 3px rgba(255, 107, 53, 0.1);
+}
+
+.period-label {
+  font-weight: 600;
+  color: #4a5568;
+  font-size: 1rem;
+  margin-left: 20px;
+}
+
+.period-select {
+  padding: 10px 16px;
+  border: 2px solid #e2e8f0;
+  border-radius: 10px;
+  font-size: 1rem;
+  background: white;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  min-width: 100px;
+  margin-left: 12px;
+}
+
+.period-select:focus {
   outline: none;
   border-color: #FF6B35;
   box-shadow: 0 0 0 3px rgba(255, 107, 53, 0.1);
@@ -699,36 +765,77 @@ onMounted(() => {
   box-shadow: 0 8px 25px rgba(255, 107, 53, 0.4);
 }
 
-/* 더 보기 섹션 */
-.load-more-section {
-  text-align: center;
+/* 페이징 섹션 */
+.pagination-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
   padding: 40px 0;
+  background: white;
+  border-radius: 15px;
+  border: 1px solid #e2e8f0;
 }
 
-.load-more-btn {
-  padding: 14px 32px;
-  background: white;
+.pagination-container {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.pagination-numbers {
+  display: flex;
+  gap: 4px;
+}
+
+.pagination-btn {
+  padding: 10px 16px;
   border: 2px solid #e2e8f0;
-  border-radius: 25px;
+  border-radius: 8px;
+  background: white;
   color: #4a5568;
   font-weight: 600;
-  font-size: 1rem;
+  font-size: 0.9rem;
   cursor: pointer;
   transition: all 0.3s ease;
-  box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+  min-width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
-.load-more-btn:hover:not(:disabled) {
+.pagination-btn:hover:not(:disabled) {
   background: #f8fafc;
   border-color: #FF6B35;
   color: #FF6B35;
   transform: translateY(-2px);
-  box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+  box-shadow: 0 4px 15px rgba(255, 107, 53, 0.2);
 }
 
-.load-more-btn:disabled {
-  opacity: 0.6;
+.pagination-btn:disabled {
+  opacity: 0.4;
   cursor: not-allowed;
+  background: #f1f5f9;
+}
+
+.pagination-btn.active {
+  background: linear-gradient(135deg, #FF6B35, #F7931E);
+  color: white;
+  border-color: #FF6B35;
+  box-shadow: 0 4px 15px rgba(255, 107, 53, 0.3);
+}
+
+.pagination-prev,
+.pagination-next {
+  padding: 10px 20px;
+  font-weight: 600;
+}
+
+.pagination-info {
+  font-size: 0.9rem;
+  color: #64748b;
+  text-align: center;
 }
 
 /* 반응형 디자인 */

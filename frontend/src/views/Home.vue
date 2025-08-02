@@ -178,29 +178,13 @@ const goToGame = (gameId) => {
  */
 const fetchBestGames = async () => {
   try {
-    let sortParam = 'popular'
-    let dateParam = ''
-    
-    switch (activeTab.value) {
-      case 'daily':
-        sortParam = 'likes'
-        dateParam = '&period=daily'
-        break
-      case 'weekly':
-        sortParam = 'likes'
-        dateParam = '&period=weekly'
-        break
-      case 'monthly':
-        sortParam = 'likes'
-        dateParam = '&period=monthly'
-        break
-      case 'all':
-        sortParam = 'likes'
-        dateParam = '&period=all'
-        break
-    }
-    
-    const response = await axios.get(`/api/web/balance-games?sort=${sortParam}&size=6${dateParam}`)
+    const response = await axios.get('/api/web/balance-games', {
+      params: {
+        sort: 'best',
+        period: activeTab.value,
+        size: 6
+      }
+    })
     popularGames.value = response.data.content
     totalGames.value = response.data.totalElements
     

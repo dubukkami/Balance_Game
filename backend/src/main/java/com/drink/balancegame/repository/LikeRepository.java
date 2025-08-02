@@ -47,4 +47,10 @@ public interface LikeRepository extends JpaRepository<Like, Long> {
      * 사용자의 댓글 추천 삭제
      */
     void deleteByUserIdAndCommentId(Long userId, Long commentId);
+    
+    /**
+     * 특정 기간 이후의 밸런스 게임 추천 수 조회
+     */
+    @Query("SELECT COUNT(l) FROM Like l WHERE l.balanceGame.id = :balanceGameId AND l.createdAt > :after")
+    Long countByBalanceGameIdAndCreatedAtAfter(@Param("balanceGameId") Long balanceGameId, @Param("after") java.time.LocalDateTime after);
 }
