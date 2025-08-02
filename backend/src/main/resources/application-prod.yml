@@ -41,7 +41,7 @@ spring:
   # JPA 설정 (운영용 - 메모리 최적화)
   jpa:
     hibernate:
-      ddl-auto: create  # 테이블 강제 생성
+      ddl-auto: ${DDL_AUTO:update}  # 환경변수로 제어
       # 메모리 최적화 설정
       connection:
         provider_disables_autocommit: true
@@ -64,8 +64,8 @@ spring:
         batch_versioned_data: true
         # 커넥션 릴리즈 설정
         connection.release_mode: after_transaction
-        # 메타데이터 최적화
-        temp.use_jdbc_metadata_defaults: false
+        # 메타데이터 최적화 (DDL 생성시 true 필요)
+        temp.use_jdbc_metadata_defaults: true
     database: postgresql
     open-in-view: false  # OSIV 비활성화로 메모리 절약
 
