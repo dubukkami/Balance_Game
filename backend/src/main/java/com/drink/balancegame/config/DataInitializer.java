@@ -13,7 +13,8 @@ import com.drink.balancegame.repository.UserRepository;
 import com.drink.balancegame.repository.VoteRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.boot.CommandLineRunner;
+import org.springframework.boot.context.event.ApplicationReadyEvent;
+import org.springframework.context.event.EventListener;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
@@ -28,7 +29,7 @@ import java.util.Random;
 @Component
 @RequiredArgsConstructor
 @Slf4j
-public class DataInitializer implements CommandLineRunner {
+public class DataInitializer {
     
     private final UserRepository userRepository;
     private final BalanceGameRepository balanceGameRepository;
@@ -39,10 +40,11 @@ public class DataInitializer implements CommandLineRunner {
     
     private final Random random = new Random();
     
-    @Override
-    public void run(String... args) throws Exception {
-        // 테스트 사용자가 이미 존재하는지 확인
-        if (userRepository.findByUsername("testuser").isEmpty()) {
+    @EventListener(ApplicationReadyEvent.class)
+    public void initializeData() {
+        try {
+            // 테스트 사용자가 이미 존재하는지 확인
+            if (userRepository.findByUsername("testuser").isEmpty()) {
             // 테스트 사용자 생성
             User testUser = User.builder()
                     .username("testuser")
@@ -160,8 +162,12 @@ public class DataInitializer implements CommandLineRunner {
         // 초기 밸런스 게임 데이터 생성
         createInitialBalanceGames();
         
-        log.info("데이터 초기화 완료. 총 사용자 수: {}, 총 게임 수: {}", 
-                userRepository.count(), balanceGameRepository.count());
+            log.info("데이터 초기화 완료. 총 사용자 수: {}, 총 게임 수: {}", 
+                    userRepository.count(), balanceGameRepository.count());
+        } catch (Exception e) {
+            log.warn("데이터 초기화 중 오류 발생: {}", e.getMessage());
+            log.info("테이블이 아직 생성되지 않았을 수 있습니다. 나중에 다시 시도하세요.");
+        }
     }
     
     /**
