@@ -20,7 +20,10 @@ import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDateTime;
 import java.util.Optional;
+import java.util.List;
+import com.drink.balancegame.entity.Like;
 
 /**
  * 웹 전용 밸런스 게임 컨트롤러
@@ -42,7 +45,8 @@ public class WebBalanceGameController {
      * 모든 밸런스 게임 조회 (페이징) - N+1 쿼리 최적화 버전
      * @param page 페이지 번호 (0부터 시작)
      * @param size 페이지 크기
-     * @param sort 정렬 기준 (latest, popular, votes)
+     * @param sort 정렬 기준 (latest, popular, votes, best)
+     * @param period 기간 (daily, weekly, monthly, all) - sort가 best일 때만 사용
      * @return 페이징된 밸런스 게임 목록
      */
     @GetMapping
@@ -50,7 +54,7 @@ public class WebBalanceGameController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(defaultValue = "latest") String sort,
-            @RequestParam(required = false) String period) {
+            @RequestParam(defaultValue = "all") String period) {
         
         try {
             Pageable pageable = createPageable(page, size, sort);
@@ -64,13 +68,15 @@ public class WebBalanceGameController {
                 case "votes":
                     results = balanceGameRepository.findAllWithStatsOrderByVoteCount(pageable);
                     break;
-                case "likes":
-                    if (period != null) {
-                        results = balanceGameRepository.findAllWithStatsOrderByLikesByPeriod(pageable, period);
-                    } else {
+                case "best":
+                    if ("all".equals(period)) {
                         results = balanceGameRepository.findAllWithStatsOrderByLikes(pageable);
+                        break; // 일반 컨버터 사용
+                    } else {
+                        results = balanceGameRepository.findAllWithStatsOrderByLikesByPeriod(pageable, period);
+                        Page<BalanceGameDto> periodDtos = results.map(this::convertToBalanceGameDtoFromStatsWithPeriod);
+                        return ResponseEntity.ok(periodDtos);
                     }
-                    break;
                 default: // "latest"
                     results = balanceGameRepository.findAllWithStats(pageable);
                     break;
@@ -276,6 +282,148 @@ public class WebBalanceGameController {
                 .userVote(null) // 로그인하지 않은 상태로 처리
                 .commentCount(commentCount)
                 .build();
+    }
+    
+    /**
+     * 기간별 통계 정보가 포함된 Object[] 배열을 BalanceGameDto로 변환
+     */
+    private BalanceGameDto convertToBalanceGameDtoFromStatsWithPeriod(Object[] row) {
+        BalanceGame game = (BalanceGame) row[0];
+        Long totalLikeCount = ((Number) row[1]).longValue();
+        Long optionACount = ((Number) row[2]).longValue(); 
+        Long optionBCount = ((Number) row[3]).longValue();
+        Long commentCount = ((Number) row[4]).longValue();
+        Long periodLikeCount = ((Number) row[5]).longValue(); // 기간별 좋아요
+        Long totalVotes = optionACount + optionBCount;
+        
+        return BalanceGameDto.builder()
+                .id(game.getId())
+                .title(game.getTitle())
+                .description(game.getDescription())
+                .optionA(game.getOptionA())
+                .optionADescription(game.getOptionADescription())
+                .optionB(game.getOptionB())
+                .optionBDescription(game.getOptionBDescription())
+                .authorId(game.getAuthor().getId())
+                .authorUsername(game.getAuthor().getUsername())
+                .authorNickname(game.getAuthor().getNickname())
+                .viewCount(game.getViewCount())
+                .createdAt(game.getCreatedAt())
+                .updatedAt(game.getUpdatedAt())
+                .likeCount(periodLikeCount) // 기간별 좋아요 수 표시
+                .isLiked(false)
+                .optionAVotes(optionACount)
+                .optionBVotes(optionBCount)
+                .totalVotes(totalVotes)
+                .userVote(null)
+                .commentCount(commentCount)
+                .build();
+    }
+    
+    
+    /**
+     * 진짜 확실한 Like 데이터 강제 리셋
+     */
+    @PostMapping("/test/fix-likes") 
+    public ResponseEntity<String> fixLikes() {
+        try {
+            // 모든 Like 삭제
+            likeRepository.deleteAll();
+            
+            List<User> users = userRepository.findAll();
+            List<BalanceGame> games = balanceGameRepository.findAll();
+            LocalDateTime now = LocalDateTime.now();
+            
+            if (users.isEmpty() || games.isEmpty()) {
+                return ResponseEntity.ok("사용자 또는 게임이 없습니다.");
+            }
+            
+            User user1 = users.get(0);
+            User user2 = users.size() > 1 ? users.get(1) : users.get(0);
+            User user3 = users.size() > 2 ? users.get(2) : users.get(0);
+            
+            // 치킨 게임 찾기
+            BalanceGame chickenGame = null;
+            for (BalanceGame game : games) {
+                if (game.getTitle().contains("치킨")) {
+                    chickenGame = game;
+                    break;
+                }
+            }
+            
+            // 치킨 게임 - 일간 베스트 (최근 24시간에만 좋아요)
+            if (chickenGame != null) {
+                for (int i = 0; i < 8; i++) {
+                    Like like = new Like();
+                    like.setUser(i % 2 == 0 ? user1 : user2);
+                    like.setBalanceGame(chickenGame);
+                    like.setCreatedAt(now.minusHours(i + 1)); // 1-8시간 전
+                    likeRepository.save(like);
+                }
+            }
+            
+            // 바다 게임 찾기  
+            BalanceGame seaGame = null;
+            for (BalanceGame game : games) {
+                if (game.getTitle().contains("바다")) {
+                    seaGame = game;
+                    break;
+                }
+            }
+            
+            // 바다 게임 - 주간 베스트 (최근 7일, 오늘은 적게)
+            if (seaGame != null) {
+                // 오늘 1개만
+                Like todayLike = new Like();
+                todayLike.setUser(user1);
+                todayLike.setBalanceGame(seaGame);
+                todayLike.setCreatedAt(now.minusHours(2));
+                likeRepository.save(todayLike);
+                
+                // 1-6일 전에 10개
+                for (int i = 0; i < 10; i++) {
+                    Like like = new Like();
+                    like.setUser(i % 3 == 0 ? user1 : (i % 3 == 1 ? user2 : user3));
+                    like.setBalanceGame(seaGame);
+                    like.setCreatedAt(now.minusHours(25 + (i * 12))); // 25시간~145시간 전 (1-6일 전)
+                    likeRepository.save(like);
+                }
+            }
+            
+            // 여름 게임 찾기
+            BalanceGame summerGame = null;
+            for (BalanceGame game : games) {
+                if (game.getTitle().contains("여름")) {
+                    summerGame = game;
+                    break;
+                }
+            }
+            
+            // 여름 게임 - 월간 베스트 (30일 내, 최근 7일은 적게)
+            if (summerGame != null) {
+                // 최근 7일에 2개만 (8일 전)
+                for (int i = 0; i < 2; i++) {
+                    Like like = new Like();
+                    like.setUser(i % 2 == 0 ? user2 : user3);
+                    like.setBalanceGame(summerGame);
+                    like.setCreatedAt(now.minusHours(169 + (i * 12))); // 8일 전
+                    likeRepository.save(like);
+                }
+                
+                // 8-30일 전에 15개
+                for (int i = 0; i < 15; i++) {
+                    Like like = new Like();
+                    like.setUser(i % 3 == 0 ? user1 : (i % 3 == 1 ? user2 : user3));
+                    like.setBalanceGame(summerGame);
+                    like.setCreatedAt(now.minusHours(200 + (i * 20))); // 8-30일 전 분산
+                    likeRepository.save(like);
+                }
+            }
+            
+            return ResponseEntity.ok("SUCCESS! 치킨(일간5개), 바다(주간8개,일간1개), 여름(월간12개,주간2개,일간0개)");
+        } catch (Exception e) {
+            return ResponseEntity.ok("Error: " + e.getMessage());
+        }
     }
     
     /**

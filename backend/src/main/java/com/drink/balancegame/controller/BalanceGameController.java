@@ -42,14 +42,16 @@ public class BalanceGameController {
      * 모든 밸런스 게임 조회 (페이징) - N+1 쿼리 최적화 버전
      * @param page 페이지 번호 (0부터 시작)
      * @param size 페이지 크기
-     * @param sort 정렬 기준 (latest, popular, votes)
+     * @param sort 정렬 기준 (latest, popular, votes, best)
+     * @param period 기간 (daily, weekly, monthly, all) - sort가 best일 때만 사용
      * @return 페이징된 밸런스 게임 목록
      */
     @GetMapping
     public ResponseEntity<Page<BalanceGameDto>> getAllBalanceGames(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
-            @RequestParam(defaultValue = "latest") String sort) {
+            @RequestParam(defaultValue = "latest") String sort,
+            @RequestParam(defaultValue = "all") String period) {
         
         try {
             Pageable pageable = createPageable(page, size, sort);
@@ -62,6 +64,9 @@ public class BalanceGameController {
                     break;
                 case "votes":
                     results = balanceGameRepository.findAllWithStatsOrderByVoteCount(pageable);
+                    break;
+                case "best":
+                    results = balanceGameRepository.findAllWithStatsOrderByLikesByPeriod(pageable, period);
                     break;
                 default: // "latest"
                     results = balanceGameRepository.findAllWithStats(pageable);

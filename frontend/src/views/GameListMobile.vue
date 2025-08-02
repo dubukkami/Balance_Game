@@ -106,9 +106,42 @@
         </div>
       </div>
 
-      <!-- 무한 스크롤 로딩 -->
-      <div v-if="hasMore" class="load-more" @click="loadMoreGames">
-        <button class="load-more-btn">더 보기</button>
+    </div>
+
+    <!-- 페이징 섹션 -->
+    <div v-if="totalPages > 1 && games.length > 0" class="pagination-section">
+      <div class="pagination-container">
+        <button 
+          @click="goToPage(currentPage - 1)" 
+          :disabled="currentPage === 0 || loading"
+          class="pagination-btn pagination-prev"
+        >
+          ← 이전
+        </button>
+        
+        <div class="pagination-numbers">
+          <button
+            v-for="page in visiblePages"
+            :key="page"
+            @click="goToPage(page - 1)"
+            :disabled="loading"
+            :class="['pagination-btn', 'pagination-number', { 'active': page - 1 === currentPage }]"
+          >
+            {{ page }}
+          </button>
+        </div>
+        
+        <button 
+          @click="goToPage(currentPage + 1)" 
+          :disabled="currentPage >= totalPages - 1 || loading"
+          class="pagination-btn pagination-next"
+        >
+          다음 →
+        </button>
+      </div>
+      
+      <div class="pagination-info">
+        {{ currentPage + 1 }} / {{ totalPages }} 페이지 (총 {{ totalElements }}개)
       </div>
     </div>
 
@@ -125,7 +158,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import axios from 'axios'
@@ -137,9 +170,10 @@ const authStore = useAuthStore()
 const games = ref([])
 const loading = ref(false)
 const currentPage = ref(0)
+const totalPages = ref(0)
+const totalElements = ref(0)
 const sortBy = ref('latest')
 const searchTerm = ref('')
-const hasMore = ref(true)
 
 // 정렬 옵션
 const sortOptions = [
@@ -148,31 +182,39 @@ const sortOptions = [
   { value: 'votes', label: '투표순' }
 ]
 
+// 페이징 관련 computed
+const visiblePages = computed(() => {
+  const pages = []
+  const start = Math.max(1, currentPage.value - 2)
+  const end = Math.min(totalPages.value, currentPage.value + 3)
+  
+  for (let i = start; i <= end; i++) {
+    pages.push(i)
+  }
+  return pages
+})
+
 /**
  * 게임 목록 조회 (모바일 API)
  */
-const fetchGames = async (reset = true) => {
+const fetchGames = async (page = 0) => {
   if (loading.value) return
   
   loading.value = true
   try {
     const params = {
-      page: reset ? 0 : currentPage.value,
+      page: page,
       size: 10,
       sort: sortBy.value
     }
     
     const response = await axios.get('/api/mobile/balance-games', { params })
     
-    if (reset) {
-      games.value = response.data.content
-      currentPage.value = 0
-    } else {
-      games.value.push(...response.data.content)
-    }
-    
-    hasMore.value = !response.data.last
+    games.value = response.data.content
     currentPage.value = response.data.number
+    totalPages.value = response.data.totalPages
+    totalElements.value = response.data.totalElements
+    
   } catch (error) {
     console.error('게임 목록 조회 실패:', error)
   } finally {
@@ -185,16 +227,17 @@ const fetchGames = async (reset = true) => {
  */
 const changeSortBy = (newSort) => {
   sortBy.value = newSort
-  fetchGames(true)
+  fetchGames(0)
 }
 
 /**
- * 더 많은 게임 로드
+ * 페이지 이동
  */
-const loadMoreGames = () => {
-  if (hasMore.value && !loading.value) {
-    currentPage.value += 1
-    fetchGames(false)
+const goToPage = (page) => {
+  if (page >= 0 && page < totalPages.value && !loading.value) {
+    fetchGames(page)
+    // 맨 위로 스크롤
+    window.scrollTo({ top: 0, behavior: 'smooth' })
   }
 }
 
@@ -203,7 +246,7 @@ const loadMoreGames = () => {
  */
 const searchGames = async () => {
   if (!searchTerm.value.trim()) {
-    fetchGames(true)
+    fetchGames(0)
     return
   }
   
@@ -217,8 +260,9 @@ const searchGames = async () => {
     
     const response = await axios.get('/api/mobile/balance-games/search', { params })
     games.value = response.data.content
-    hasMore.value = !response.data.last
-    currentPage.value = 0
+    currentPage.value = response.data.number
+    totalPages.value = response.data.totalPages
+    totalElements.value = response.data.totalElements
   } catch (error) {
     console.error('게임 검색 실패:', error)
   } finally {
@@ -257,7 +301,7 @@ const formatDate = (dateString) => {
 
 // 컴포넌트 마운트 시 데이터 로드
 onMounted(() => {
-  fetchGames(true)
+  fetchGames(0)
 })
 </script>
 
@@ -338,6 +382,35 @@ onMounted(() => {
 }
 
 .sort-tab:hover:not(.active) {
+  background: #e9ecef;
+}
+
+/* 기간 탭 (베스트 선택 시) */
+.period-tabs {
+  display: flex;
+  gap: 4px;
+  margin-top: 8px;
+}
+
+.period-tab {
+  flex: 1;
+  padding: 6px 12px;
+  border: none;
+  background: #f1f3f4;
+  color: #666;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.period-tab.active {
+  background: #ff9500;
+  color: white;
+}
+
+.period-tab:hover:not(.active) {
   background: #e9ecef;
 }
 
@@ -605,5 +678,76 @@ onMounted(() => {
 
 .create-btn:hover {
   transform: translateY(-1px);
+}
+
+/* 페이징 섹션 - 모바일 최적화 */
+.pagination-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 20px;
+  background: white;
+  border-top: 1px solid #e1e5e9;
+}
+
+.pagination-container {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.pagination-numbers {
+  display: flex;
+  gap: 2px;
+}
+
+.pagination-btn {
+  padding: 8px 12px;
+  border: 1px solid #e1e5e9;
+  border-radius: 6px;
+  background: white;
+  color: #666;
+  font-weight: 500;
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.pagination-btn:hover:not(:disabled) {
+  background: #f8f9fa;
+  border-color: #ffd93d;
+  color: #ffd93d;
+  transform: translateY(-1px);
+}
+
+.pagination-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  background: #f1f3f4;
+}
+
+.pagination-btn.active {
+  background: #ffd93d;
+  color: #333;
+  border-color: #ffd93d;
+  font-weight: 600;
+}
+
+.pagination-prev,
+.pagination-next {
+  padding: 8px 16px;
+  font-weight: 600;
+}
+
+.pagination-info {
+  font-size: 12px;
+  color: #666;
+  text-align: center;
 }
 </style>

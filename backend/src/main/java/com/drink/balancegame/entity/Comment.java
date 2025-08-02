@@ -54,7 +54,12 @@ public class Comment {
     
     /** 생성일시 */
     @CreationTimestamp
+    @Column(name = "created_at")
     private LocalDateTime createdAt;
+    
+    public void setCreatedAt(LocalDateTime createdAt) {
+        this.createdAt = createdAt;
+    }
     
     /** 수정일시 */
     @UpdateTimestamp

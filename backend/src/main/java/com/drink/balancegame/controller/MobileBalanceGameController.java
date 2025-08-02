@@ -43,14 +43,16 @@ public class MobileBalanceGameController {
      * 모든 밸런스 게임 조회 (페이징) - N+1 쿼리 최적화 버전
      * @param page 페이지 번호 (0부터 시작)
      * @param size 페이지 크기
-     * @param sort 정렬 기준 (latest, popular, votes)
+     * @param sort 정렬 기준 (latest, popular, votes, best)
+     * @param period 기간 (daily, weekly, monthly, all) - sort가 best일 때만 사용
      * @return 페이징된 밸런스 게임 목록
      */
     @GetMapping
     public ResponseEntity<Page<BalanceGameDto>> getAllBalanceGames(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
-            @RequestParam(defaultValue = "latest") String sort) {
+            @RequestParam(defaultValue = "latest") String sort,
+            @RequestParam(defaultValue = "all") String period) {
         
         try {
             Pageable pageable = createPageable(page, size, sort);
@@ -64,6 +66,15 @@ public class MobileBalanceGameController {
                 case "votes":
                     results = balanceGameRepository.findAllWithStatsOrderByVoteCount(pageable);
                     break;
+                case "best":
+                    if ("all".equals(period)) {
+                        results = balanceGameRepository.findAllWithStatsOrderByLikes(pageable);
+                        break; // 일반 컨버터 사용
+                    } else {
+                        results = balanceGameRepository.findAllWithStatsOrderByLikesByPeriod(pageable, period);
+                        Page<BalanceGameDto> periodDtos = results.map(this::convertToBalanceGameDtoFromStatsWithPeriod);
+                        return ResponseEntity.ok(periodDtos);
+                    }
                 default: // "latest"
                     results = balanceGameRepository.findAllWithStats(pageable);
                     break;
@@ -267,6 +278,42 @@ public class MobileBalanceGameController {
                 .optionBVotes(optionBCount)
                 .totalVotes(totalVotes)
                 .userVote(null) // 로그인하지 않은 상태로 처리
+                .commentCount(commentCount)
+                .build();
+    }
+    
+    /**
+     * 기간별 통계 정보가 포함된 Object[] 배열을 BalanceGameDto로 변환
+     */
+    private BalanceGameDto convertToBalanceGameDtoFromStatsWithPeriod(Object[] row) {
+        BalanceGame game = (BalanceGame) row[0];
+        Long totalLikeCount = ((Number) row[1]).longValue();
+        Long optionACount = ((Number) row[2]).longValue(); 
+        Long optionBCount = ((Number) row[3]).longValue();
+        Long commentCount = ((Number) row[4]).longValue();
+        Long periodLikeCount = ((Number) row[5]).longValue(); // 기간별 좋아요
+        Long totalVotes = optionACount + optionBCount;
+        
+        return BalanceGameDto.builder()
+                .id(game.getId())
+                .title(game.getTitle())
+                .description(game.getDescription())
+                .optionA(game.getOptionA())
+                .optionADescription(game.getOptionADescription())
+                .optionB(game.getOptionB())
+                .optionBDescription(game.getOptionBDescription())
+                .authorId(game.getAuthor().getId())
+                .authorUsername(game.getAuthor().getUsername())
+                .authorNickname(game.getAuthor().getNickname())
+                .viewCount(game.getViewCount())
+                .createdAt(game.getCreatedAt())
+                .updatedAt(game.getUpdatedAt())
+                .likeCount(totalLikeCount) // 전체 좋아요 수 표시
+                .isLiked(false)
+                .optionAVotes(optionACount)
+                .optionBVotes(optionBCount)
+                .totalVotes(totalVotes)
+                .userVote(null)
                 .commentCount(commentCount)
                 .build();
     }
