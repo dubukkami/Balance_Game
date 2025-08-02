@@ -86,4 +86,9 @@ public class BalanceGame {
     @OneToMany(mappedBy = "balanceGame", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @JsonManagedReference("balanceGame-comments")
     private List<Comment> comments;
+    
+    /** 이 게임에 대한 좋아요 목록 */
+    @OneToMany(mappedBy = "balanceGame", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @JsonManagedReference("balanceGame-likes")
+    private List<Like> likes;
 }

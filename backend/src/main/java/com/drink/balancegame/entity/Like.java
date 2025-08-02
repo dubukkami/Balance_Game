@@ -1,5 +1,6 @@
 package com.drink.balancegame.entity;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -38,7 +39,7 @@ public class Like {
     /** 추천한 밸런스 게임 (게임 추천인 경우) */
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "balance_game_id")
-    @JsonIgnoreProperties({"votes", "comments", "author"})
+    @JsonBackReference("balanceGame-likes")
     private BalanceGame balanceGame;
     
     /** 추천한 댓글 (댓글 추천인 경우) */

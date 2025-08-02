@@ -41,7 +41,7 @@ spring:
   # JPA 설정 (운영용 - 메모리 최적화)
   jpa:
     hibernate:
-      ddl-auto: update  # 운영에서는 스키마 보존
+      ddl-auto: ${DDL_AUTO:update}  # 환경변수로 제어 가능하도록 변경
       # 메모리 최적화 설정
       connection:
         provider_disables_autocommit: true
