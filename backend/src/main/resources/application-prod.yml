@@ -16,32 +16,58 @@ spring:
     username: ${DB_USERNAME}
     password: ${DB_PASSWORD}
     
-    # 커넥션 풀 최적화 (무료 플랜 고려)
+    # 커넥션 풀 최적화 (Railway 무료 플랜용 - 안정성 중심)
     hikari:
-      maximum-pool-size: ${DB_MAX_POOL_SIZE:5}
-      minimum-idle: ${DB_MIN_IDLE:1}
-      idle-timeout: ${DB_IDLE_TIMEOUT:300000}      # 5분
-      max-lifetime: ${DB_MAX_LIFETIME:1200000}     # 20분
+      maximum-pool-size: ${DB_MAX_POOL_SIZE:5}     # 약간 늘려서 안정성 확보
+      minimum-idle: ${DB_MIN_IDLE:2}               # 최소 연결 수 증가
+      idle-timeout: ${DB_IDLE_TIMEOUT:300000}      # 5분으로 복원
+      max-lifetime: ${DB_MAX_LIFETIME:1800000}     # 30분으로 복원 (안정성)
       connection-timeout: ${DB_CONNECTION_TIMEOUT:20000}  # 20초
-      leak-detection-threshold: 0  # 시계 동기화 문제로 비활성화
+      leak-detection-threshold: ${DB_LEAK_DETECTION:60000}  # 60초로 리크 감지 활성화
       validation-timeout: ${DB_VALIDATION_TIMEOUT:5000}   # 5초
       initialization-fail-timeout: ${DB_INIT_FAIL_TIMEOUT:30000}  # 30초
+      # 추가 안정성 설정
+      auto-commit: true
+      read-only: false
+      pool-name: "BabyFashionCP"
+      catalog: ${DB_CATALOG:}
+      schema: ${DB_SCHEMA:}
 
   # H2 콘솔 비활성화 (보안)
   h2:
     console:
       enabled: false
 
-  # JPA 설정 (운영용)
+  # JPA 설정 (운영용 - 메모리 최적화)
   jpa:
     hibernate:
       ddl-auto: update  # 운영에서는 스키마 보존
+      # 메모리 최적화 설정
+      connection:
+        provider_disables_autocommit: true
+      cache:
+        use_second_level_cache: false
+        use_query_cache: false
+      jdbc:
+        batch_size: 20
+        fetch_size: 50
+        time_zone: UTC
     show-sql: false   # 성능상 SQL 로깅 비활성화
     properties:
       hibernate:
         format_sql: false
         dialect: org.hibernate.dialect.PostgreSQLDialect
+        # 추가 최적화 설정
+        jdbc.batch_size: 20
+        order_inserts: true
+        order_updates: true
+        batch_versioned_data: true
+        # 커넥션 릴리즈 설정
+        connection.release_mode: after_transaction
+        # 메타데이터 최적화
+        temp.use_jdbc_metadata_defaults: false
     database: postgresql
+    open-in-view: false  # OSIV 비활성화로 메모리 절약
 
   # CORS 설정 (운영 도메인)
   web:
@@ -113,13 +139,19 @@ spring:
 server:
   port: ${PORT:8080}  # Railway 자동 포트
   
-  # Tomcat 커넥션 최적화
+  # Tomcat 커넥션 최적화 (Railway 무료 플랜용 - 더 제한적)
   tomcat:
-    max-connections: ${SERVER_MAX_CONNECTIONS:50}
-    accept-count: ${SERVER_ACCEPT_COUNT:10}
-    max-threads: ${SERVER_MAX_THREADS:20}
+    max-connections: ${SERVER_MAX_CONNECTIONS:30}    # 더 적은 연결
+    accept-count: ${SERVER_ACCEPT_COUNT:5}           # 대기열 축소
+    max-threads: ${SERVER_MAX_THREADS:10}            # 스레드 수 줄임
     min-spare-threads: ${SERVER_MIN_THREADS:2}
-    connection-timeout: ${SERVER_CONNECTION_TIMEOUT:20000}
+    connection-timeout: ${SERVER_CONNECTION_TIMEOUT:15000}
+    
+  # 추가 메모리 최적화
+  servlet:
+    multipart:
+      max-file-size: 5MB
+      max-request-size: 10MB
     
   # 응답 압축 (트래픽 절약)
   compression:
