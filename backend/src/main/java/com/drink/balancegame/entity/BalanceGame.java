@@ -1,5 +1,6 @@
 package com.drink.balancegame.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
@@ -11,6 +12,7 @@ import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -85,10 +87,13 @@ public class BalanceGame {
     /** 이 게임에 대한 댓글 목록 */
     @OneToMany(mappedBy = "balanceGame", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @JsonManagedReference("balanceGame-comments")
-    private List<Comment> comments;
+    @Builder.Default
+    private List<Comment> comments = new ArrayList<>();
     
     /** 이 게임에 대한 좋아요 목록 */
     @OneToMany(mappedBy = "balanceGame", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    @JsonManagedReference("balanceGame-likes")
-    private List<Like> likes;
+    @JsonIgnore
+    @Builder.Default
+    private List<Like> likes = new ArrayList<>();
+    
 }

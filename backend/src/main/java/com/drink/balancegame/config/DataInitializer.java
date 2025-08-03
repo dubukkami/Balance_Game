@@ -154,9 +154,14 @@ public class DataInitializer {
                         .provider(User.Provider.values()[random.nextInt(User.Provider.values().length)])
                         .build();
                 
-                additionalUsers.add(userRepository.save(user));
-                log.info("추가 테스트 사용자 생성 완료: username={}", username);
+                additionalUsers.add(user);
             }
+        }
+        
+        // 벌크 저장
+        if (!additionalUsers.isEmpty()) {
+            userRepository.saveAll(additionalUsers);
+            log.info("추가 테스트 사용자 {} 명 생성 완료", additionalUsers.size());
         }
         
         // 초기 밸런스 게임 데이터 생성
@@ -536,18 +541,23 @@ public class DataInitializer {
     }
     
     /**
-     * 좋아요 생성 헬퍼 메서드
+     * 좋아요 생성 헬퍼 메서드 (벌크 처리용)
      */
     private void createLike(User user, BalanceGame game, LocalDateTime likeTime) {
-        // 중복 좋아요 방지
-        if (likeRepository.findByUserIdAndBalanceGameId(user.getId(), game.getId()).isEmpty()) {
-            Like like = new Like();
-            like.setUser(user);
-            like.setBalanceGame(game);
-            like.setCreatedAt(likeTime);
-            likeRepository.save(like);
+        try {
+            // 중복 체크
+            if (likeRepository.findByUserAndBalanceGame(user, game).isPresent()) {
+                return; // 이미 좋아요가 있으면 스킵
+            }
             
-            log.info("Like 생성: {} - {} - {}", game.getTitle(), user.getUsername(), likeTime);
+            Like like = Like.builder()
+                    .user(user)
+                    .balanceGame(game)
+                    .createdAt(likeTime)
+                    .build();
+            likeRepository.save(like);
+        } catch (Exception e) {
+            log.warn("좋아요 생성 실패: user={}, game={}, error={}", user.getUsername(), game.getTitle(), e.getMessage());
         }
     }
 }
