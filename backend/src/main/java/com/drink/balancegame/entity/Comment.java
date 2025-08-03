@@ -76,4 +76,9 @@ public class Comment {
     @JoinColumn(name = "balance_game_id", nullable = false)
     @JsonBackReference("balanceGame-comments")
     private BalanceGame balanceGame;
+    
+    /** 이 댓글에 대한 좋아요 목록 */
+    @OneToMany(mappedBy = "comment", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @JsonManagedReference("comment-likes")
+    private List<Like> likes;
 }

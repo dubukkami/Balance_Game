@@ -93,6 +93,11 @@ public class User {
     @JsonIgnore
     private List<Comment> comments;
     
+    /** 사용자가 좋아요한 목록 */
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @JsonIgnore
+    private List<Like> likes;
+    
     
     /** OAuth 제공자 열거형 */
     public enum Provider {
