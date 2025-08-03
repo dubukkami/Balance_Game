@@ -38,21 +38,15 @@ spring:
     console:
       enabled: false
 
-  # JPA 설정 (운영용 - 메모리 최적화)
+  # JPA 설정 (운영용)
   jpa:
     hibernate:
-      ddl-auto: create  # 테이블 생성 강제
-    show-sql: true    # 디버깅을 위해 SQL 로깅 활성화
+      ddl-auto: create
+    show-sql: false
     properties:
       hibernate:
-        dialect: org.hibernate.dialect.PostgreSQLDialect
-        hbm2ddl:
-          auto: create
-        format_sql: true
-        show_sql: true
-        generate_ddl: true
+        default_schema: public
     database: postgresql
-    generate-ddl: true
 
   # CORS 설정 (운영 도메인)
   web:
@@ -190,14 +184,11 @@ management:
       system: false  # 시스템 메트릭스 비활성화
       process: false  # 프로세스 메트릭스 비활성화
 
-# 로깅 설정 (운영용 - 최소 로깅)
+# 로깅 설정 (운영용)
 logging:
   level:
-    root: WARN
+    root: INFO
     com.drink.balancegame: INFO
-    org.springframework.web: WARN
-    org.hibernate.SQL: WARN
-    org.hibernate.type.descriptor.sql.BasicBinder: WARN
 
 # 보안 설정
 security:

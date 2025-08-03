@@ -42,6 +42,12 @@ public class DataInitializer {
     
     @EventListener(ApplicationReadyEvent.class)
     public void initializeData() {
+        // 테이블 생성을 위한 약간의 지연
+        try {
+            Thread.sleep(2000); // 2초 대기
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
         try {
             // 테스트 사용자가 이미 존재하는지 확인
             if (userRepository.findByUsername("testuser").isEmpty()) {
