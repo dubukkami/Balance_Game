@@ -45,7 +45,7 @@ public class Like {
     /** 추천한 댓글 (댓글 추천인 경우) */
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "comment_id")
-    @JsonIgnoreProperties({"replies", "author", "balanceGame"})
+    @JsonBackReference("comment-likes")
     private Comment comment;
     
     /** 생성일시 */
