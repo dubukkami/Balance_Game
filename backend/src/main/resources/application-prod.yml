@@ -42,11 +42,17 @@ spring:
   jpa:
     hibernate:
       ddl-auto: create  # 테이블 생성 강제
-    show-sql: false   # 성능상 SQL 로깅 비활성화
+    show-sql: true    # 디버깅을 위해 SQL 로깅 활성화
     properties:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
+        hbm2ddl:
+          auto: create
+        format_sql: true
+        show_sql: true
+        generate_ddl: true
     database: postgresql
+    generate-ddl: true
 
   # CORS 설정 (운영 도메인)
   web:
