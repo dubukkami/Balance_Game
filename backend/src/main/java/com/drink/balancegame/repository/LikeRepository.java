@@ -1,6 +1,8 @@
 package com.drink.balancegame.repository;
 
+import com.drink.balancegame.entity.BalanceGame;
 import com.drink.balancegame.entity.Like;
+import com.drink.balancegame.entity.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -53,4 +55,9 @@ public interface LikeRepository extends JpaRepository<Like, Long> {
      */
     @Query("SELECT COUNT(l) FROM Like l WHERE l.balanceGame.id = :balanceGameId AND l.createdAt > :after")
     Long countByBalanceGameIdAndCreatedAtAfter(@Param("balanceGameId") Long balanceGameId, @Param("after") java.time.LocalDateTime after);
+    
+    /**
+     * 사용자와 밸런스 게임으로 좋아요 조회 (중복 방지용)
+     */
+    Optional<Like> findByUserAndBalanceGame(User user, BalanceGame balanceGame);
 }

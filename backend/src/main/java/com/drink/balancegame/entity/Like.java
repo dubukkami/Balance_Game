@@ -39,13 +39,13 @@ public class Like {
     /** 추천한 밸런스 게임 (게임 추천인 경우) */
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "balance_game_id")
-    @JsonBackReference("balanceGame-likes")
+    @JsonIgnoreProperties({"votes", "comments", "author"})
     private BalanceGame balanceGame;
     
     /** 추천한 댓글 (댓글 추천인 경우) */
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "comment_id")
-    @JsonBackReference("comment-likes")
+    @JsonIgnoreProperties({"replies", "author", "balanceGame"})
     private Comment comment;
     
     /** 생성일시 */

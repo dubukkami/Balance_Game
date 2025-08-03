@@ -41,33 +41,12 @@ spring:
   # JPA 설정 (운영용 - 메모리 최적화)
   jpa:
     hibernate:
-      ddl-auto: ${DDL_AUTO:update}  # 환경변수로 제어
-      # 메모리 최적화 설정
-      connection:
-        provider_disables_autocommit: true
-      cache:
-        use_second_level_cache: false
-        use_query_cache: false
-      jdbc:
-        batch_size: 20
-        fetch_size: 50
-        time_zone: UTC
+      ddl-auto: create  # 테이블 생성 강제
     show-sql: false   # 성능상 SQL 로깅 비활성화
     properties:
       hibernate:
-        format_sql: false
         dialect: org.hibernate.dialect.PostgreSQLDialect
-        # 추가 최적화 설정
-        jdbc.batch_size: 20
-        order_inserts: true
-        order_updates: true
-        batch_versioned_data: true
-        # 커넥션 릴리즈 설정
-        connection.release_mode: after_transaction
-        # 메타데이터 최적화 (DDL 생성시 true 필요)
-        temp.use_jdbc_metadata_defaults: true
     database: postgresql
-    open-in-view: false  # OSIV 비활성화로 메모리 절약
 
   # CORS 설정 (운영 도메인)
   web:

@@ -1,6 +1,7 @@
 package com.drink.balancegame.entity;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
@@ -79,6 +80,8 @@ public class Comment {
     
     /** 이 댓글에 대한 좋아요 목록 */
     @OneToMany(mappedBy = "comment", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    @JsonManagedReference("comment-likes")
-    private List<Like> likes;
+    @JsonIgnore
+    @Builder.Default
+    private List<Like> likes = new ArrayList<>();
+    
 }
