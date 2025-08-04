@@ -1,0 +1,45 @@
+name: Keep Railway Server Alive
+
+on:
+  schedule:
+    # 매 10분마다 실행 (Railway 무료 플랜 sleep 방지)
+    - cron: '*/10 * * * *'
+  workflow_dispatch: # 수동 실행 가능
+
+jobs:
+  ping-server:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Keep Railway Server Alive
+      run: |
+        echo "🏓 Pinging Railway server to prevent sleep..."
+        
+        # Railway 서버 URL (실제 URL로 변경 필요)
+        SERVER_URL="${{ secrets.RAILWAY_SERVER_URL || 'https://your-app.railway.app' }}"
+        
+        # ping 엔드포인트 호출
+        response=$(curl -s -w "HTTPSTATUS:%{http_code}" "$SERVER_URL/api/ping")
+        http_code=$(echo $response | tr -d '\n' | sed -e 's/.*HTTPSTATUS://')
+        
+        if [ "$http_code" -eq 200 ]; then
+          echo "✅ Server is alive! HTTP $http_code"
+          echo "Response: $(echo $response | sed -e 's/HTTPSTATUS:.*//g')"
+        else
+          echo "❌ Server might be down. HTTP $http_code"
+          echo "Response: $(echo $response | sed -e 's/HTTPSTATUS:.*//g')"
+          exit 1
+        fi
+        
+        # heartbeat 엔드포인트도 호출
+        echo "🫀 Checking heartbeat..."
+        heartbeat_response=$(curl -s -w "HTTPSTATUS:%{http_code}" "$SERVER_URL/api/heartbeat")
+        heartbeat_code=$(echo $heartbeat_response | tr -d '\n' | sed -e 's/.*HTTPSTATUS://')
+        
+        if [ "$heartbeat_code" -eq 200 ]; then
+          echo "✅ Heartbeat OK! HTTP $heartbeat_code"
+        else
+          echo "⚠️  Heartbeat check failed. HTTP $heartbeat_code"
+        fi
+        
+        echo "🎯 Keep-alive ping completed at $(date)"
