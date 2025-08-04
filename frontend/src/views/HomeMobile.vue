@@ -195,6 +195,8 @@ const fetchUserCount = async () => {
     totalUsers.value = response.data.length
   } catch (error) {
     console.error('사용자 수 조회 실패:', error)
+    // API 실패 시 기본값
+    totalUsers.value = 0
   }
 }
 
