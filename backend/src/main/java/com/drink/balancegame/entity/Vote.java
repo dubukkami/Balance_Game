@@ -17,9 +17,16 @@ import java.time.LocalDateTime;
  * 한 사용자는 한 게임에 대해 한 번만 투표 가능
  */
 @Entity
-@Table(name = "votes", uniqueConstraints = {
-    @UniqueConstraint(columnNames = {"user_id", "balance_game_id"})
-})
+@Table(name = "votes", 
+       uniqueConstraints = {
+           @UniqueConstraint(columnNames = {"user_id", "balance_game_id"})
+       },
+       indexes = {
+           @Index(name = "idx_votes_balance_game", columnList = "balance_game_id"),
+           @Index(name = "idx_votes_user", columnList = "user_id"),
+           @Index(name = "idx_votes_created_at", columnList = "created_at"),
+           @Index(name = "idx_votes_option", columnList = "selected_option")
+       })
 @Data
 @Builder
 @NoArgsConstructor

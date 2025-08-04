@@ -149,7 +149,51 @@ onMounted(() => {
   console.log('밸런스 게임 커뮤니티 시작! ⚖️')
   // 인증 상태 초기화
   authStore.initAuth()
+  
+  // Railway Sleep 방지를 위한 Keep-Alive
+  startKeepAlive()
 })
+
+/**
+ * Railway Sleep 방지를 위한 Keep-Alive 설정
+ * 5분마다 백엔드에 ping 요청을 보내서 서버가 잠들지 않도록 함
+ */
+const startKeepAlive = () => {
+  // 개발 환경에서는 실행하지 않음
+  if (import.meta.env.DEV) {
+    console.log('개발 환경: Keep-Alive 비활성화')
+    return
+  }
+  
+  const keepAliveInterval = 5 * 60 * 1000 // 5분
+  
+  const pingServer = async () => {
+    try {
+      const response = await fetch('/api/heartbeat', {
+        method: 'GET',
+        headers: {
+          'Cache-Control': 'no-cache'
+        }
+      })
+      
+      if (response.ok) {
+        console.log('✅ Keep-Alive: 서버 연결 유지됨')
+      } else {
+        console.warn('⚠️ Keep-Alive: 서버 응답 이상', response.status)
+      }
+    } catch (error) {
+      console.warn('⚠️ Keep-Alive: 서버 연결 실패', error.message)
+    }
+  }
+  
+  // 초기 ping (30초 후)
+  setTimeout(pingServer, 30000)
+  
+  // 정기적 ping (5분마다)
+  setInterval(pingServer, keepAliveInterval)
+  
+  console.log('🔄 Keep-Alive 활성화: 5분마다 서버 ping')
+}
 
 /**
  * 로그아웃 처리

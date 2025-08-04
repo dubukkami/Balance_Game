@@ -70,9 +70,7 @@ public class CommentController {
             @PathVariable Long balanceGameId,
             @RequestParam(required = false) Long userId) {
         List<Comment> comments = commentRepository.findByBalanceGameIdAndParentCommentIsNullOrderByCreatedAtDesc(balanceGameId);
-        List<CommentDto> commentDtos = comments.stream()
-                .map(comment -> dtoConversionService.convertToCommentDtoWithReplies(comment, userId))
-                .collect(Collectors.toList());
+        List<CommentDto> commentDtos = dtoConversionService.convertToCommentDtosWithReplies(comments, userId);
         
         return ResponseEntity.ok(commentDtos);
     }

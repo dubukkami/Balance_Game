@@ -173,7 +173,7 @@ const fetchBestGames = async () => {
   } catch (error) {
     console.error('베스트 게임 조회 실패:', error)
     // API 실패 시 기본값
-    totalVotes.value = 1234
+    totalVotes.value = 0
     totalGames.value = 0
     popularGames.value = []
   }

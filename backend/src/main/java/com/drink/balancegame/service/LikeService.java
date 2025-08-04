@@ -155,10 +155,8 @@ public class LikeService {
         // 사용자 존재 확인
         validationService.validateUserExists(userId);
         
-        // 사용자의 모든 게임 좋아요 삭제
-        likeRepository.findAll().stream()
-                .filter(like -> like.getUser().getId().equals(userId) && like.getBalanceGame() != null)
-                .forEach(likeRepository::delete);
+        // 사용자의 모든 게임 좋아요 삭제 (최적화된 쿼리 사용)
+        likeRepository.deleteByUserIdAndBalanceGameIsNotNull(userId);
         
         log.info("사용자의 모든 게임 좋아요 삭제 완료 - 사용자 ID: {}", userId);
     }
@@ -174,10 +172,8 @@ public class LikeService {
         // 사용자 존재 확인
         validationService.validateUserExists(userId);
         
-        // 사용자의 모든 댓글 좋아요 삭제
-        likeRepository.findAll().stream()
-                .filter(like -> like.getUser().getId().equals(userId) && like.getComment() != null)
-                .forEach(likeRepository::delete);
+        // 사용자의 모든 댓글 좋아요 삭제 (최적화된 쿼리 사용)
+        likeRepository.deleteByUserIdAndCommentIsNotNull(userId);
         
         log.info("사용자의 모든 댓글 좋아요 삭제 완료 - 사용자 ID: {}", userId);
     }

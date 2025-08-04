@@ -7,18 +7,16 @@ import com.drink.balancegame.entity.BalanceGame;
 import com.drink.balancegame.entity.User;
 import com.drink.balancegame.repository.BalanceGameRepository;
 import com.drink.balancegame.repository.UserRepository;
-import com.drink.balancegame.service.ValidationService;
-import com.drink.balancegame.service.DtoConversionService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 /**
  * 밸런스 게임 비즈니스 로직 서비스
@@ -45,7 +43,8 @@ public class BalanceGameService {
         log.debug("모든 밸런스 게임 조회 - 페이지: {}, 사용자 ID: {}", pageable, userId);
         
         Page<BalanceGame> games = balanceGameRepository.findAll(pageable);
-        return games.map(game -> dtoConversionService.convertToBalanceGameDto(game, userId));
+        List<BalanceGameDto> gameDtos = dtoConversionService.convertToBalanceGameDtos(games.getContent(), userId);
+        return new PageImpl<>(gameDtos, pageable, games.getTotalElements());
     }
     
     /**
@@ -58,7 +57,8 @@ public class BalanceGameService {
         log.debug("인기 게임 조회 - 페이지: {}, 사용자 ID: {}", pageable, userId);
         
         Page<BalanceGame> games = balanceGameRepository.findByOrderByViewCountDesc(pageable);
-        return games.map(game -> dtoConversionService.convertToBalanceGameDto(game, userId));
+        List<BalanceGameDto> gameDtos = dtoConversionService.convertToBalanceGameDtos(games.getContent(), userId);
+        return new PageImpl<>(gameDtos, pageable, games.getTotalElements());
     }
     
     /**
@@ -71,7 +71,8 @@ public class BalanceGameService {
         log.debug("최신 게임 조회 - 페이지: {}, 사용자 ID: {}", pageable, userId);
         
         Page<BalanceGame> games = balanceGameRepository.findByOrderByCreatedAtDesc(pageable);
-        return games.map(game -> dtoConversionService.convertToBalanceGameDto(game, userId));
+        List<BalanceGameDto> gameDtos = dtoConversionService.convertToBalanceGameDtos(games.getContent(), userId);
+        return new PageImpl<>(gameDtos, pageable, games.getTotalElements());
     }
     
     /**
@@ -84,7 +85,8 @@ public class BalanceGameService {
         log.debug("투표수 기준 게임 조회 - 페이지: {}, 사용자 ID: {}", pageable, userId);
         
         Page<BalanceGame> games = balanceGameRepository.findByOrderByVoteCountDesc(pageable);
-        return games.map(game -> dtoConversionService.convertToBalanceGameDto(game, userId));
+        List<BalanceGameDto> gameDtos = dtoConversionService.convertToBalanceGameDtos(games.getContent(), userId);
+        return new PageImpl<>(gameDtos, pageable, games.getTotalElements());
     }
     
     /**
