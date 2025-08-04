@@ -8,6 +8,7 @@ import com.drink.balancegame.security.JwtTokenProvider;
 import com.drink.balancegame.service.DtoConversionService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 import jakarta.servlet.http.HttpServletRequest;
@@ -62,6 +63,7 @@ public class MobileAuthController {
      * 모바일 전용 현재 사용자 정보 조회
      */
     @GetMapping("/me")
+    @Transactional(readOnly = true)
     public ResponseEntity<UserDto> getCurrentUser(@RequestHeader("Authorization") String token) {
         try {
             String jwt = token.substring(7); // "Bearer " 제거
@@ -145,6 +147,7 @@ public class MobileAuthController {
      * 모바일 전용 앱 버전 확인
      */
     @GetMapping("/app-info")
+    @Transactional(readOnly = true)
     public ResponseEntity<?> getAppInfo() {
         Map<String, Object> response = new HashMap<>();
         response.put("platform", "mobile");

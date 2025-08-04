@@ -72,6 +72,8 @@ public class SecurityConfig {
                 // Health check endpoints (for Railway)
                 .requestMatchers("/actuator/health").permitAll()
                 .requestMatchers("/actuator/info").permitAll()
+                .requestMatchers("/api/ping").permitAll()
+                .requestMatchers("/api/heartbeat").permitAll()
                 // Public endpoints
                 .requestMatchers("/api/auth/**").permitAll()
                 .requestMatchers("/api/balance-games/**").permitAll()

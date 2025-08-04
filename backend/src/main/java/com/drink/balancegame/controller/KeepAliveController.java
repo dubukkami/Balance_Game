@@ -1,6 +1,7 @@
 package com.drink.balancegame.controller;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -21,6 +22,7 @@ public class KeepAliveController {
      * 최소한의 리소스로 응답하여 애플리케이션을 깨워둠
      */
     @GetMapping("/ping")
+    @Transactional(readOnly = true)
     public ResponseEntity<Map<String, Object>> ping() {
         return ResponseEntity.ok(Map.of(
                 "status", "alive",
@@ -33,6 +35,7 @@ public class KeepAliveController {
      * 헬스체크와 유사하지만 더 가벼운 버전
      */
     @GetMapping("/heartbeat")
+    @Transactional(readOnly = true)
     public ResponseEntity<String> heartbeat() {
         return ResponseEntity.ok("OK");
     }

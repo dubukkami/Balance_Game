@@ -11,6 +11,7 @@ import com.drink.balancegame.repository.CommentRepository;
 import com.drink.balancegame.service.DtoConversionService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -37,6 +38,7 @@ public class MobileUserController {
      * @return 사용자 목록
      */
     @GetMapping
+    @Transactional(readOnly = true)
     public ResponseEntity<List<User>> getAllUsers() {
         List<User> users = userRepository.findAll();
         return ResponseEntity.ok(users);
@@ -48,6 +50,7 @@ public class MobileUserController {
      * @return 사용자 정보
      */
     @GetMapping("/{id}")
+    @Transactional(readOnly = true)
     public ResponseEntity<UserProfileDto> getUser(@PathVariable Long id) {
         Optional<User> user = userRepository.findById(id);
         
@@ -106,6 +109,7 @@ public class MobileUserController {
      * @return 사용자 활동 통계
      */
     @GetMapping("/{id}/stats")
+    @Transactional(readOnly = true)
     public ResponseEntity<UserStatsDto> getUserStats(@PathVariable Long id) {
         Optional<User> user = userRepository.findById(id);
         if (user.isEmpty()) {

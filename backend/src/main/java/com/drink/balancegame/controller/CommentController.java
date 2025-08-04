@@ -18,6 +18,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -47,6 +48,7 @@ public class CommentController {
      * @return 페이징된 최상위 댓글 목록 (대댓글 포함)
      */
     @GetMapping("/game/{balanceGameId}")
+    @Transactional(readOnly = true)
     public ResponseEntity<Page<CommentDto>> getCommentsByGame(
             @PathVariable Long balanceGameId,
             @RequestParam(defaultValue = "0") int page,
@@ -66,6 +68,7 @@ public class CommentController {
      * @return 최상위 댓글 목록 (대댓글 포함)
      */
     @GetMapping("/game/{balanceGameId}/list")
+    @Transactional(readOnly = true)
     public ResponseEntity<List<CommentDto>> getCommentsByGameList(
             @PathVariable Long balanceGameId,
             @RequestParam(required = false) Long userId) {
@@ -81,6 +84,7 @@ public class CommentController {
      * @return 대댓글 목록
      */
     @GetMapping("/{parentCommentId}/replies")
+    @Transactional(readOnly = true)
     public ResponseEntity<List<CommentDto>> getRepliesByParentComment(
             @PathVariable Long parentCommentId,
             @RequestParam(required = false) Long userId) {
@@ -100,6 +104,7 @@ public class CommentController {
      * @return 페이징된 댓글 목록
      */
     @GetMapping("/user/{userId}")
+    @Transactional(readOnly = true)
     public ResponseEntity<Page<CommentDto>> getCommentsByUser(
             @PathVariable Long userId,
             @RequestParam(defaultValue = "0") int page,
@@ -118,6 +123,7 @@ public class CommentController {
      * @return 댓글 정보
      */
     @GetMapping("/{id}")
+    @Transactional(readOnly = true)
     public ResponseEntity<CommentDto> getComment(@PathVariable Long id) {
         Optional<Comment> comment = commentRepository.findById(id);
         

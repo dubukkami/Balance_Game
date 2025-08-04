@@ -98,6 +98,7 @@ public class WebBalanceGameController {
      * @return 밸런스 게임 정보
      */
     @GetMapping("/{id}")
+    @Transactional(readOnly = true)
     public ResponseEntity<BalanceGameDto> getBalanceGame(@PathVariable Long id) {
         Optional<BalanceGame> balanceGame = balanceGameRepository.findById(id);
         
@@ -120,6 +121,7 @@ public class WebBalanceGameController {
      * @return 밸런스 게임 정보
      */
     @GetMapping("/{id}/info")
+    @Transactional(readOnly = true)
     public ResponseEntity<BalanceGameDto> getBalanceGameInfo(@PathVariable Long id) {
         Optional<BalanceGame> balanceGame = balanceGameRepository.findById(id);
         
@@ -217,6 +219,7 @@ public class WebBalanceGameController {
      * @return 검색 결과
      */
     @GetMapping("/search")
+    @Transactional(readOnly = true)
     public ResponseEntity<Page<BalanceGameDto>> searchBalanceGames(
             @RequestParam String title,
             @RequestParam(defaultValue = "0") int page,

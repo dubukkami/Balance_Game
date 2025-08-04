@@ -18,6 +18,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Optional;
@@ -47,6 +48,7 @@ public class BalanceGameController {
      * @return 페이징된 밸런스 게임 목록
      */
     @GetMapping
+    @Transactional(readOnly = true)
     public ResponseEntity<Page<BalanceGameDto>> getAllBalanceGames(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
@@ -88,6 +90,7 @@ public class BalanceGameController {
      * @return 밸런스 게임 정보
      */
     @GetMapping("/{id}")
+    @Transactional(readOnly = true)
     public ResponseEntity<BalanceGameDto> getBalanceGame(@PathVariable Long id) {
         Optional<BalanceGame> balanceGame = balanceGameRepository.findById(id);
         
@@ -110,6 +113,7 @@ public class BalanceGameController {
      * @return 밸런스 게임 정보
      */
     @GetMapping("/{id}/info")
+    @Transactional(readOnly = true)
     public ResponseEntity<BalanceGameDto> getBalanceGameInfo(@PathVariable Long id) {
         Optional<BalanceGame> balanceGame = balanceGameRepository.findById(id);
         
@@ -207,6 +211,7 @@ public class BalanceGameController {
      * @return 검색 결과
      */
     @GetMapping("/search")
+    @Transactional(readOnly = true)
     public ResponseEntity<Page<BalanceGameDto>> searchBalanceGames(
             @RequestParam String title,
             @RequestParam(defaultValue = "0") int page,

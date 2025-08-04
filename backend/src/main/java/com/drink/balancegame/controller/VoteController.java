@@ -13,6 +13,7 @@ import com.drink.balancegame.repository.VoteRepository;
 import com.drink.balancegame.service.DtoConversionService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -39,6 +40,7 @@ public class VoteController {
      * @return 투표 목록
      */
     @GetMapping("/game/{balanceGameId}")
+    @Transactional(readOnly = true)
     public ResponseEntity<List<VoteDto>> getVotesByGame(@PathVariable Long balanceGameId) {
         List<Vote> votes = voteRepository.findByBalanceGameId(balanceGameId);
         List<VoteDto> voteDtos = votes.stream()
@@ -54,6 +56,7 @@ public class VoteController {
      * @return 투표 목록
      */
     @GetMapping("/user/{userId}")
+    @Transactional(readOnly = true)
     public ResponseEntity<List<VoteDto>> getVotesByUser(@PathVariable Long userId) {
         List<Vote> votes = voteRepository.findByUserId(userId);
         List<VoteDto> voteDtos = votes.stream()
@@ -70,6 +73,7 @@ public class VoteController {
      * @return 투표 정보
      */
     @GetMapping("/user/{userId}/game/{balanceGameId}")
+    @Transactional(readOnly = true)
     public ResponseEntity<VoteDto> getUserVoteForGame(
             @PathVariable Long userId,
             @PathVariable Long balanceGameId) {
@@ -203,6 +207,7 @@ public class VoteController {
      * @return 투표 통계
      */
     @GetMapping("/stats/{balanceGameId}")
+    @Transactional(readOnly = true)
     public ResponseEntity<VoteStatsDto> getVoteStats(@PathVariable Long balanceGameId) {
         Long optionAVotes = voteRepository.countOptionAVotesByBalanceGameId(balanceGameId);
         Long optionBVotes = voteRepository.countOptionBVotesByBalanceGameId(balanceGameId);
