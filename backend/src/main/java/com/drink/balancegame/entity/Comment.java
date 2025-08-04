@@ -21,7 +21,13 @@ import java.util.List;
  * 밸런스 게임에 대한 사용자의 댓글 정보를 저장
  */
 @Entity
-@Table(name = "comments")
+@Table(name = "comments",
+       indexes = {
+           @Index(name = "idx_comments_balance_game", columnList = "balance_game_id"),
+           @Index(name = "idx_comments_author", columnList = "author_id"),
+           @Index(name = "idx_comments_parent", columnList = "parent_comment_id"),
+           @Index(name = "idx_comments_created_at", columnList = "created_at")
+       })
 @Data
 @Builder
 @NoArgsConstructor

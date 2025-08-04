@@ -23,7 +23,6 @@ import org.springframework.web.bind.annotation.*;
 import java.time.LocalDateTime;
 import java.util.Optional;
 import java.util.List;
-import com.drink.balancegame.entity.Like;
 
 /**
  * 웹 전용 밸런스 게임 컨트롤러

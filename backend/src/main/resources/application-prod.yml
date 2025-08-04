@@ -3,11 +3,14 @@
 # ===============================
 
 spring:
-  # 자동 설정 제외 (메트릭스 관련)
+  # 메모리 절약을 위한 자동 설정 제외
   autoconfigure:
     exclude:
       - org.springframework.boot.actuate.autoconfigure.metrics.MetricsAutoConfiguration
       - org.springframework.boot.actuate.autoconfigure.metrics.export.simple.SimpleMetricsExportAutoConfiguration
+      - org.springframework.boot.autoconfigure.admin.SpringApplicationAdminJmxAutoConfiguration
+      - org.springframework.boot.autoconfigure.jmx.JmxAutoConfiguration
+      - org.springframework.boot.autoconfigure.gson.GsonAutoConfiguration
 
   # PostgreSQL 데이터베이스 설정 (Neon DB)
   datasource:
@@ -16,22 +19,15 @@ spring:
     username: ${DB_USERNAME}
     password: ${DB_PASSWORD}
     
-    # 커넥션 풀 최적화 (Railway 무료 플랜용 - 안정성 중심)
+    # Railway 512MB 메모리 제한 극한 최적화
     hikari:
-      maximum-pool-size: ${DB_MAX_POOL_SIZE:5}     # 약간 늘려서 안정성 확보
-      minimum-idle: ${DB_MIN_IDLE:2}               # 최소 연결 수 증가
-      idle-timeout: ${DB_IDLE_TIMEOUT:300000}      # 5분으로 복원
-      max-lifetime: ${DB_MAX_LIFETIME:1800000}     # 30분으로 복원 (안정성)
-      connection-timeout: ${DB_CONNECTION_TIMEOUT:20000}  # 20초
-      leak-detection-threshold: ${DB_LEAK_DETECTION:60000}  # 60초로 리크 감지 활성화
-      validation-timeout: ${DB_VALIDATION_TIMEOUT:5000}   # 5초
-      initialization-fail-timeout: ${DB_INIT_FAIL_TIMEOUT:30000}  # 30초
-      # 추가 안정성 설정
-      auto-commit: true
-      read-only: false
-      pool-name: "BabyFashionCP"
-      catalog: ${DB_CATALOG:}
-      schema: ${DB_SCHEMA:}
+      maximum-pool-size: 1        # 극한 메모리 절약 - 단일 커넥션
+      minimum-idle: 1             
+      idle-timeout: 60000         # 1분으로 단축
+      max-lifetime: 300000        # 5분으로 단축  
+      connection-timeout: 5000    # 5초
+      leak-detection-threshold: 0 # 비활성화
+      validation-timeout: 2000    # 2초
 
   # H2 콘솔 비활성화 (보안)
   h2:
@@ -46,7 +42,28 @@ spring:
     properties:
       hibernate:
         default_schema: public
+        jdbc:
+          batch_size: 5               # 배치 크기 감소
+          order_inserts: true
+          order_updates: true
+          batch_versioned_data: true
+        format_sql: false
+        use_sql_comments: false
+        temp:
+          use_jdbc_metadata_defaults: false
+        cache:
+          use_second_level_cache: false
+          use_query_cache: false
+          use_structured_cache: false
+        connection:
+          provider_disables_autocommit: false
+        # 메모리 절약을 위한 추가 설정
+        order_by:
+          default_null_ordering: none
+        sql:
+          init_command: "SET sql_mode=''"
     database: postgresql
+    open-in-view: false
 
   # CORS 설정 (운영 도메인)
   web:
@@ -118,25 +135,31 @@ spring:
 server:
   port: ${PORT:8080}  # Railway 자동 포트
   
-  # Tomcat 커넥션 최적화 (Railway 무료 플랜용 - 더 제한적)
+  # Railway 512MB 메모리 제한 극한 최적화
   tomcat:
-    max-connections: ${SERVER_MAX_CONNECTIONS:30}    # 더 적은 연결
-    accept-count: ${SERVER_ACCEPT_COUNT:5}           # 대기열 축소
-    max-threads: ${SERVER_MAX_THREADS:10}            # 스레드 수 줄임
-    min-spare-threads: ${SERVER_MIN_THREADS:2}
-    connection-timeout: ${SERVER_CONNECTION_TIMEOUT:15000}
-    
-  # 추가 메모리 최적화
+    max-connections: 10           # 최소한으로 감소
+    accept-count: 2               # 대기열 최소화
+    max-threads: 4                # 스레드 수 대폭 감소
+    min-spare-threads: 1          # 최소 스레드
+    connection-timeout: 8000
+    # 메모리 절약을 위한 추가 설정
+    max-swallow-size: 1MB         # 스왈로우 크기 제한
+    max-http-form-post-size: 1MB  # 포스트 크기 제한
   servlet:
     multipart:
-      max-file-size: 5MB
-      max-request-size: 10MB
+      max-file-size: 1MB          # 파일 크기 제한
+      max-request-size: 2MB       # 요청 크기 제한
+    # 메모리 절약을 위한 추가 설정
+    session:
+      timeout: 10m                # 세션 타임아웃 단축
+    encoding:
+      charset: UTF-8
+      enabled: true
     
-  # 응답 압축 (트래픽 절약)
   compression:
     enabled: true
-    mime-types: text/html,text/xml,text/plain,text/css,text/javascript,application/javascript,application/json,application/xml
-    min-response-size: 1024
+    mime-types: application/json,text/html,text/css,text/javascript
+    min-response-size: 512
     
   # 에러 페이지 비활성화 (보안)
   error:
@@ -158,37 +181,37 @@ app:
   oauth2:
     authorized-redirect-uri: ${AUTHORIZED_REDIRECT_URI}  # 프론트엔드 리다이렉트 URL
 
-# 헬스체크 및 모니터링 (Railway 대응)
+# 헬스체크 및 모니터링 (Railway 무료플랜 대응)
 management:
   endpoints:
     web:
       exposure:
-        include: health,info
+        include: health
       base-path: /actuator
   endpoint:
     health:
-      show-details: when-authorized
+      show-details: never  # 보안상 세부사항 숨김
       cache:
-        time-to-live: ${HEALTH_CACHE_TTL:5s}
-    info:
-      enabled: true
-    metrics:
-      enabled: false  # 컨테이너 환경에서 메트릭스 비활성화
+        time-to-live: 10s  # 캐시 시간 늘려서 부하 감소
   health:
     diskspace:
-      threshold: ${HEALTH_DISK_THRESHOLD:100MB}
+      enabled: false  # Railway에서 불필요
     db:
       enabled: true
   metrics:
     enable:
-      system: false  # 시스템 메트릭스 비활성화
-      process: false  # 프로세스 메트릭스 비활성화
+      all: false  # 모든 메트릭스 비활성화로 메모리 절약
 
-# 로깅 설정 (운영용)
+# 로깅 설정 (메모리 절약 - Railway 512MB 제한)
 logging:
   level:
-    root: INFO
+    root: WARN                    # 메모리 절약을 위해 로그 레벨 상승
     com.drink.balancegame: INFO
+    org.springframework: ERROR    # Spring 로그 최소화
+    org.hibernate: ERROR          # Hibernate 로그 최소화
+    com.zaxxer.hikari: ERROR      # HikariCP 로그 최소화
+  pattern:
+    console: "%d{HH:mm:ss} %-5level %logger{20} - %msg%n"  # 간소화된 로그 패턴
 
 # 보안 설정
 security:

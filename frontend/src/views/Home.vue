@@ -192,8 +192,8 @@ const fetchBestGames = async () => {
     totalVotes.value = popularGames.value.reduce((sum, game) => sum + game.totalVotes, 0)
   } catch (error) {
     console.error('베스트 게임 조회 실패:', error)
-    // API 실패 시 기본 더미 데이터로 페이지 표시
-    totalVotes.value = 1234
+    // API 실패 시 기본값으로 설정
+    totalVotes.value = 0
     totalGames.value = 0
     popularGames.value = []
   }
@@ -216,7 +216,7 @@ const fetchUserCount = async () => {
   } catch (error) {
     console.error('사용자 수 조회 실패:', error)
     // API 실패 시 기본값
-    totalUsers.value = 42
+    totalUsers.value = 0
   }
 }
 
@@ -255,8 +255,8 @@ onMounted(() => {
     fetchUserCount()
   } catch (error) {
     console.error('API 호출 실패, 기본값 사용:', error)
-    totalVotes.value = 1234
-    totalUsers.value = 42
+    totalVotes.value = 0
+    totalUsers.value = 0
     popularGames.value = []
   }
 })

@@ -42,11 +42,12 @@ public class DataInitializer {
     
     @EventListener(ApplicationReadyEvent.class)
     public void initializeData() {
-        // 테이블 생성을 위한 약간의 지연
+        // Railway 환경: 테이블 생성 대기 및 메모리 최적화
         try {
-            Thread.sleep(2000); // 2초 대기
+            Thread.sleep(2000); // Railway는 일반적으로 2초면 충분
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
+            return;
         }
         try {
             // 테스트 사용자가 이미 존재하는지 확인
@@ -147,9 +148,9 @@ public class DataInitializer {
             log.info("네이버 테스트 사용자3 생성 완료: username=naver_user3, password=test");
         }
         
-        // 추가 테스트 사용자들 생성 (기간별 베스트를 위해 8명으로 증가)
+        // 메모리 절약을 위해 사용자 수 감소 (3명)
         List<User> additionalUsers = new ArrayList<>();
-        for (int i = 1; i <= 8; i++) {
+        for (int i = 1; i <= 3; i++) {
             String username = "user" + i;
             if (userRepository.findByUsername(username).isEmpty()) {
                 User user = User.builder()
@@ -164,10 +165,11 @@ public class DataInitializer {
             }
         }
         
-        // 벌크 저장
+        // 메모리 절약을 위한 벌크 저장
         if (!additionalUsers.isEmpty()) {
             userRepository.saveAll(additionalUsers);
-            log.info("추가 테스트 사용자 {} 명 생성 완료", additionalUsers.size());
+            log.info("메모리 절약용 테스트 사용자 {} 명 생성 완료", additionalUsers.size());
+            additionalUsers.clear(); // 메모리 즉시 해제
         }
         
         // 초기 밸런스 게임 데이터 생성
@@ -185,12 +187,12 @@ public class DataInitializer {
      * 초기 밸런스 게임 데이터 생성
      */
     private void createInitialBalanceGames() {
-        // 기존 데이터 삭제 (테스트를 위해)
-        log.info("모든 데이터를 삭제하고 새로 생성합니다.");
-        likeRepository.deleteAll();
-        commentRepository.deleteAll();
-        voteRepository.deleteAll();
-        balanceGameRepository.deleteAll();
+        // 기존 데이터 확인 후 사용자만 유지
+        if (balanceGameRepository.count() > 0) {
+            log.info("기존 데이터가 존재합니다. 초기화를 스킵합니다.");
+            return;
+        }
+        log.info("초기 데이터를 생성합니다.");
         
         User admin = userRepository.findByUsername("admin").orElse(null);
         User testUser = userRepository.findByUsername("testuser").orElse(null);
@@ -378,19 +380,22 @@ public class DataInitializer {
         };
         
         for (BalanceGame game : games) {
-            // 각 게임마다 랜덤한 수의 투표 생성 (3-6개로 최소화)
-            int voteCount = 3 + random.nextInt(4);
+            // 각 게임마다 최소한의 투표 생성 (2-3개)
+            int voteCount = 2 + random.nextInt(2);
+            List<Vote> votes = new ArrayList<>();
             for (int i = 0; i < voteCount && i < users.size(); i++) {
                 Vote vote = Vote.builder()
                         .balanceGame(game)
                         .user(users.get(i))
                         .selectedOption(random.nextBoolean() ? Vote.VoteOption.A : Vote.VoteOption.B)
                         .build();
-                voteRepository.save(vote);
+                votes.add(vote);
             }
+            voteRepository.saveAll(votes);
             
-            // 각 게임마다 랜덤한 수의 댓글 생성 (0-2개로 최소화)
-            int commentCount = random.nextInt(3);
+            // 각 게임마다 최소한의 댓글 생성 (0-1개)
+            int commentCount = random.nextInt(2);
+            List<Comment> gameComments = new ArrayList<>();
             for (int i = 0; i < commentCount; i++) {
                 User randomUser = users.get(random.nextInt(users.size()));
                 Comment comment = Comment.builder()
@@ -398,14 +403,10 @@ public class DataInitializer {
                         .balanceGame(game)
                         .author(randomUser)
                         .build();
-                
-                // 댓글 작성 시간을 게임 생성 후 랜덤하게 설정
-                long gameCreatedHours = game.getCreatedAt().until(LocalDateTime.now(), java.time.temporal.ChronoUnit.HOURS);
-                if (gameCreatedHours > 0) {
-                    comment.setCreatedAt(game.getCreatedAt().plusHours(random.nextInt((int) gameCreatedHours)));
-                }
-                
-                commentRepository.save(comment);
+                gameComments.add(comment);
+            }
+            if (!gameComments.isEmpty()) {
+                commentRepository.saveAll(gameComments);
             }
             
             // 게임별로 기간에 따른 좋아요 생성
@@ -498,11 +499,13 @@ public class DataInitializer {
         
         // 치킨 게임 - 일간 베스트 (최근 24시간에만 많은 좋아요)
         if (gameTitle.contains("치킨")) {
-            for (int i = 0; i < 8; i++) {
+            List<Like> likes = new ArrayList<>();
+            for (int i = 0; i < 5; i++) {
                 if (userIndex >= users.size()) userIndex = 0;
-                createLike(users.get(userIndex++), game, now.minusHours(i + 1));
+                likes.add(createLikeObject(users.get(userIndex++), game, now.minusHours(i + 1)));
             }
-            log.info("치킨 게임 일간 좋아요 8개 생성");
+            likeRepository.saveAll(likes);
+            log.info("치킨 게임 일간 좋아요 5개 생성");
             return;
         }
         
@@ -547,20 +550,22 @@ public class DataInitializer {
     }
     
     /**
-     * 좋아요 생성 헬퍼 메서드 (벌크 처리용)
+     * 좋아요 객체 생성 (벌크 저장용)
+     */
+    private Like createLikeObject(User user, BalanceGame game, LocalDateTime likeTime) {
+        return Like.builder()
+                .user(user)
+                .balanceGame(game)
+                .createdAt(likeTime)
+                .build();
+    }
+    
+    /**
+     * 좋아요 생성 헬퍼 메서드 (단일 저장용)
      */
     private void createLike(User user, BalanceGame game, LocalDateTime likeTime) {
         try {
-            // 중복 체크
-            if (likeRepository.findByUserAndBalanceGame(user, game).isPresent()) {
-                return; // 이미 좋아요가 있으면 스킵
-            }
-            
-            Like like = Like.builder()
-                    .user(user)
-                    .balanceGame(game)
-                    .createdAt(likeTime)
-                    .build();
+            Like like = createLikeObject(user, game, likeTime);
             likeRepository.save(like);
         } catch (Exception e) {
             log.warn("좋아요 생성 실패: user={}, game={}, error={}", user.getUsername(), game.getTitle(), e.getMessage());

@@ -4,9 +4,13 @@ import com.drink.balancegame.entity.Comment;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * 댓글 리포지토리
@@ -73,4 +77,27 @@ public interface CommentRepository extends JpaRepository<Comment, Long> {
      * @return 최상위 댓글 목록
      */
     List<Comment> findByBalanceGameIdAndParentCommentIsNullOrderByCreatedAtDesc(Long balanceGameId);
+    
+    /**
+     * 여러 게임의 댓글 수를 한번에 조회 (N+1 방지)
+     */
+    @Query("SELECT c.balanceGame.id, COUNT(c) FROM Comment c WHERE c.balanceGame.id IN :gameIds GROUP BY c.balanceGame.id")
+    List<Object[]> countByBalanceGameIdInRaw(@Param("gameIds") List<Long> gameIds);
+    
+    default Map<Long, Long> countByBalanceGameIdIn(List<Long> gameIds) {
+        if (gameIds == null || gameIds.isEmpty()) {
+            return Map.of();
+        }
+        return countByBalanceGameIdInRaw(gameIds).stream()
+                .collect(Collectors.toMap(
+                        row -> (Long) row[0],
+                        row -> (Long) row[1]
+                ));
+    }
+    
+    /**
+     * 부모 댓글 ID 리스트로 모든 대댓글 한번에 조회 (N+1 방지)
+     */
+    @Query("SELECT c FROM Comment c WHERE c.parentComment.id IN :parentIds ORDER BY c.parentComment.id, c.createdAt")
+    List<Comment> findByParentCommentIdIn(@Param("parentIds") List<Long> parentIds);
 }

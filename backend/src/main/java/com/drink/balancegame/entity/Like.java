@@ -19,6 +19,12 @@ import java.time.LocalDateTime;
        uniqueConstraints = {
            @UniqueConstraint(columnNames = {"user_id", "balance_game_id"}),
            @UniqueConstraint(columnNames = {"user_id", "comment_id"})
+       },
+       indexes = {
+           @Index(name = "idx_likes_balance_game", columnList = "balance_game_id"),
+           @Index(name = "idx_likes_user", columnList = "user_id"),
+           @Index(name = "idx_likes_comment", columnList = "comment_id"),
+           @Index(name = "idx_likes_created_at", columnList = "created_at")
        })
 @Data
 @Builder(toBuilder = true)

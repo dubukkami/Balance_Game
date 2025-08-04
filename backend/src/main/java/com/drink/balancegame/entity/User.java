@@ -98,8 +98,6 @@ public class User {
     @JsonIgnore
     private List<Like> likes;
     
-    
-    
     /** OAuth 제공자 열거형 */
     public enum Provider {
         GOOGLE, KAKAO, NAVER

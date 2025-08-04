@@ -27,18 +27,23 @@ FROM openjdk:17-jdk-slim
 
 WORKDIR /app
 
-## 시간대 설정 (선택사항)
-#RUN apt-get update && \
-#    DEBIAN_FRONTEND=noninteractive apt-get install -y tzdata && \
-#    ln -sf /usr/share/zoneinfo/Asia/Seoul /etc/localtime && \
-#    echo "Asia/Seoul" > /etc/timezone
-
-
 # 빌드된 JAR 파일 복사
 COPY --from=builder /app/build/libs/*.jar app.jar
 
 # 포트 노출
 EXPOSE 8080
 
-# 애플리케이션 실행
-ENTRYPOINT ["java", "-Dspring.profiles.active=prod", "-jar", "/app/app.jar"]
+# Railway 512MB 제한에 맞춘 JVM 메모리 설정 및 애플리케이션 실행
+ENTRYPOINT ["java", \
+    "-Xms64m", \
+    "-Xmx350m", \
+    "-XX:MetaspaceSize=64m", \
+    "-XX:MaxMetaspaceSize=100m", \
+    "-XX:+UseG1GC", \
+    "-XX:MaxGCPauseMillis=100", \
+    "-XX:+UseStringDeduplication", \
+    "-XX:+OptimizeStringConcat", \
+    "-XX:+UseCompressedOops", \
+    "-XX:+UseCompressedClassPointers", \
+    "-Dspring.profiles.active=prod", \
+    "-jar", "/app/app.jar"]
