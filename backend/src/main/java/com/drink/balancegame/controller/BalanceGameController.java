@@ -244,20 +244,6 @@ public class BalanceGameController {
     }
     
     /**
-     * 정렬 타입에 따른 밸런스 게임 조회
-     */
-    private Page<BalanceGame> getBalanceGamesBySortType(String sort, Pageable pageable) {
-        switch (sort) {
-            case "popular":
-                return balanceGameRepository.findByOrderByViewCountDesc(pageable);
-            case "votes":
-                return balanceGameRepository.findByOrderByVoteCountDesc(pageable);
-            default:
-                return balanceGameRepository.findByOrderByCreatedAtDesc(pageable);
-        }
-    }
-    
-    /**
      * 통계 정보가 포함된 Object[] 배열을 BalanceGameDto로 변환
      * N+1 쿼리 문제 해결용 메서드
      */

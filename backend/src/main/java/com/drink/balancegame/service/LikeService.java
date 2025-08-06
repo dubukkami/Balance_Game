@@ -177,44 +177,4 @@ public class LikeService {
         
         log.info("사용자의 모든 댓글 좋아요 삭제 완료 - 사용자 ID: {}", userId);
     }
-    
-    /**
-     * 게임의 모든 좋아요 삭제 (게임 삭제시 사용)
-     * @param balanceGameId 밸런스 게임 ID
-     */
-    @Transactional
-    public void removeAllGameLikes(Long balanceGameId) {
-        log.debug("게임의 모든 좋아요 삭제 - 게임 ID: {}", balanceGameId);
-        
-        // 게임 존재 확인
-        validationService.validateBalanceGameExists(balanceGameId);
-        
-        // 게임의 모든 좋아요 삭제
-        likeRepository.findAll().stream()
-                .filter(like -> like.getBalanceGame() != null && 
-                               like.getBalanceGame().getId().equals(balanceGameId))
-                .forEach(likeRepository::delete);
-        
-        log.info("게임의 모든 좋아요 삭제 완료 - 게임 ID: {}", balanceGameId);
-    }
-    
-    /**
-     * 댓글의 모든 좋아요 삭제 (댓글 삭제시 사용)
-     * @param commentId 댓글 ID
-     */
-    @Transactional
-    public void removeAllCommentLikes(Long commentId) {
-        log.debug("댓글의 모든 좋아요 삭제 - 댓글 ID: {}", commentId);
-        
-        // 댓글 존재 확인
-        validationService.validateCommentExists(commentId);
-        
-        // 댓글의 모든 좋아요 삭제
-        likeRepository.findAll().stream()
-                .filter(like -> like.getComment() != null && 
-                               like.getComment().getId().equals(commentId))
-                .forEach(likeRepository::delete);
-        
-        log.info("댓글의 모든 좋아요 삭제 완료 - 댓글 ID: {}", commentId);
-    }
 }
