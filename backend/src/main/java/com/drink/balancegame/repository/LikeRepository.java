@@ -44,15 +44,6 @@ public interface LikeRepository extends JpaRepository<Like, Long> {
     @Query("SELECT l FROM Like l WHERE l.user.id = :userId AND l.comment.id = :commentId")
     Optional<Like> findByUserIdAndCommentId(@Param("userId") Long userId, @Param("commentId") Long commentId);
     
-    /**
-     * 사용자의 밸런스 게임 추천 삭제
-     */
-    void deleteByUserIdAndBalanceGameId(Long userId, Long balanceGameId);
-    
-    /**
-     * 사용자의 댓글 추천 삭제
-     */
-    void deleteByUserIdAndCommentId(Long userId, Long commentId);
     
     /**
      * 특정 기간 이후의 밸런스 게임 추천 수 조회
@@ -60,10 +51,6 @@ public interface LikeRepository extends JpaRepository<Like, Long> {
     @Query("SELECT COUNT(l) FROM Like l WHERE l.balanceGame.id = :balanceGameId AND l.createdAt > :after")
     Long countByBalanceGameIdAndCreatedAtAfter(@Param("balanceGameId") Long balanceGameId, @Param("after") java.time.LocalDateTime after);
     
-    /**
-     * 사용자와 밸런스 게임으로 좋아요 조회 (중복 방지용)
-     */
-    Optional<Like> findByUserAndBalanceGame(User user, BalanceGame balanceGame);
     
     /**
      * 사용자의 모든 게임 좋아요 삭제 (성능 최적화)

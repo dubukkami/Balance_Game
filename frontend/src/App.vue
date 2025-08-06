@@ -209,17 +209,6 @@ const handleLogout = () => {
   }
 }
 
-/**
- * Provider 이름 변환
- */
-const getProviderName = (provider) => {
-  const providerMap = {
-    'GOOGLE': '구글',
-    'KAKAO': '카카오',
-    'NAVER': '네이버'
-  }
-  return providerMap[provider] || provider
-}
 </script>
 
 <style scoped>
