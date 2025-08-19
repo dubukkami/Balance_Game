@@ -28,13 +28,14 @@
 - CSS3, 반응형 디자인
 
 **배포 및 인프라**
-- Railway (백엔드 배포)
+- Render (백엔드 배포)
 - Vercel (프론트엔드 배포)
 - PostgreSQL (Neon DB)
 - GitHub Actions (CI/CD)
 
 ## 🚀 빠른 시작
 
+### 로컬 개발 환경
 ```bash
 # 저장소 클론
 git clone https://github.com/your-username/balance-game-community.git
@@ -49,6 +50,9 @@ cd frontend
 npm install
 npm run dev
 ```
+
+### 🚀 Render 배포
+**상세한 배포 가이드는 [RENDER_DEPLOYMENT.md](./RENDER_DEPLOYMENT.md)를 참고하세요.**
 
 **로컬 개발 환경**
 - 🖥️ 프론트엔드: http://localhost:3000
@@ -136,7 +140,7 @@ PUT  /api/web/users/profile                   # 프로필 수정 (인증 필요)
 - `feature/*` - 기능 개발 브랜치
 
 ### 🏗️ 배포 파이프라인
-1. **Railway** (백엔드)
+1. **Render** (백엔드)
    - `main` 브랜치 자동 배포
    - PostgreSQL (Neon DB) 연결
    - 환경변수 기반 설정

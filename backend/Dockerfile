@@ -33,17 +33,18 @@ COPY --from=builder /app/build/libs/*.jar app.jar
 # 포트 노출
 EXPOSE 8080
 
-# Railway 512MB 제한에 맞춘 JVM 메모리 설정 및 애플리케이션 실행
+# Render 512MB 제한에 맞춘 JVM 메모리 설정 및 애플리케이션 실행
 ENTRYPOINT ["java", \
     "-Xms64m", \
-    "-Xmx350m", \
+    "-Xmx400m", \
     "-XX:MetaspaceSize=64m", \
-    "-XX:MaxMetaspaceSize=100m", \
+    "-XX:MaxMetaspaceSize=96m", \
     "-XX:+UseG1GC", \
-    "-XX:MaxGCPauseMillis=100", \
+    "-XX:MaxGCPauseMillis=200", \
     "-XX:+UseStringDeduplication", \
     "-XX:+OptimizeStringConcat", \
     "-XX:+UseCompressedOops", \
     "-XX:+UseCompressedClassPointers", \
+    "-XX:+UseContainerSupport", \
     "-Dspring.profiles.active=prod", \
     "-jar", "/app/app.jar"]
